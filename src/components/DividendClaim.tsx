@@ -17,43 +17,8 @@ const DividendClaim = () => {
   const { dividends, refresh } = useBalance();
   const [loading, setLoading] = useState(false);
 
-  const handleClaim = async () => {
-    if (!contract || !isConnected) {
-      toast({
-        title: "Error",
-        description: "Please connect wallet",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const tx = await contract.claimDividends();
-      
-      toast({
-        title: "Transaction Sent",
-        description: "Waiting for confirmation...",
-      });
-
-      await tx.wait();
-      
-      toast({
-        title: "Success",
-        description: "Dividend claimed successfully",
-      });
-      
-      refresh();
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: handleContractError(error),
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Note: Dividend functionality is in separate Erc20DividendTrackerUpgradeable contract
+  // Would need to interact with that contract separately
 
   return (
     <Card className="component">
@@ -64,16 +29,15 @@ const DividendClaim = () => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="text-2xl font-bold">{parseFloat(dividends).toFixed(2)} HAYQ</div>
-        <p className="text-sm text-muted-foreground">Available to claim</p>
-        <Button 
-          onClick={handleClaim} 
-          className="w-full"
-          disabled={!isConnected || loading || parseFloat(dividends) === 0}
-        >
-          {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-          {t("dividend")}
-        </Button>
+        <div className="text-sm text-muted-foreground">
+          Dividend tracking managed by separate ERC20DividendTracker contract
+        </div>
+        <div className="text-sm text-muted-foreground">
+          Dividends distributed proportionally to HAYQ token holders
+        </div>
+        <div className="text-sm text-muted-foreground">
+          <span className="font-bold">Integration pending</span> - Dividend tracker contract address needed
+        </div>
       </CardContent>
     </Card>
   );

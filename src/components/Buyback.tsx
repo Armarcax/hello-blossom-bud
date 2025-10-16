@@ -18,69 +18,11 @@ const Buyback = () => {
   const [nextBuyback, setNextBuyback] = useState<number>(0);
   const [totalBoughtBack, setTotalBoughtBack] = useState<string>("0");
 
-  useEffect(() => {
-    const fetchBuybackInfo = async () => {
-      if (!readContract) return;
+  // Note: Buyback info would need to be tracked separately or via events
+  // Current HAYQ contract doesn't have getNextBuybackTime/getTotalBuyback view functions
 
-      try {
-        const [next, total] = await Promise.all([
-          readContract.getNextBuybackTime(),
-          readContract.getTotalBuyback(),
-        ]);
-
-        setNextBuyback(next.toNumber());
-        setTotalBoughtBack(ethers.utils.formatEther(total));
-      } catch (error) {
-        console.error('Error fetching buyback info:', error);
-      }
-    };
-
-    fetchBuybackInfo();
-    const interval = setInterval(fetchBuybackInfo, 30000);
-    return () => clearInterval(interval);
-  }, [readContract]);
-
-  const handleBuyback = async () => {
-    if (!contract || !isConnected) {
-      toast({
-        title: "Error",
-        description: "Please connect wallet",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const tx = await contract.executeBuyback();
-      
-      toast({
-        title: "Transaction Sent",
-        description: "Waiting for confirmation...",
-      });
-
-      await tx.wait();
-      
-      toast({
-        title: "Success",
-        description: "Buyback initiated",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: handleContractError(error),
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getDaysUntilBuyback = () => {
-    const now = Math.floor(Date.now() / 1000);
-    const diff = nextBuyback - now;
-    return Math.max(0, Math.ceil(diff / 86400));
-  };
+  // Note: Buyback is owner-only function in current contract
+  // This would need admin privileges to execute
 
   return (
     <Card className="component">
@@ -92,19 +34,14 @@ const Buyback = () => {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="text-sm text-muted-foreground">
-          Next buyback: <span className="font-bold">{getDaysUntilBuyback()} days</span>
+          Buyback mechanism implemented on-chain
         </div>
         <div className="text-sm text-muted-foreground">
-          Total bought back: <span className="font-bold">{parseFloat(totalBoughtBack).toFixed(2)} HAYQ</span>
+          Swaps HAYQ for MiniMVP tokens via configured DEX router
         </div>
-        <Button 
-          onClick={handleBuyback} 
-          className="w-full"
-          disabled={!isConnected || loading}
-        >
-          {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-          Participate in Buyback
-        </Button>
+        <div className="text-sm text-muted-foreground">
+          <span className="font-bold">Owner-only function</span> - Contact admin to initiate buyback
+        </div>
       </CardContent>
     </Card>
   );

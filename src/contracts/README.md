@@ -1,4 +1,49 @@
-# HAYQ Smart Contract Setup
+# HAYQ Smart Contracts
+
+## Overview
+
+This directory contains the HAYQ token smart contracts and related infrastructure.
+
+## Contracts
+
+### Core Contracts
+
+- **HAYQ.sol** - Main HAYQ ERC20 token with staking and buyback functionality
+- **HAYQMiniMVP.sol** - Mini MVP token for liquidity
+- **Erc20DividendTrackerUpgradeable.sol** - ERC20 dividend distribution tracker
+
+### Supporting Contracts
+
+- **VestingVault.sol** - Token vesting functionality
+- **MultiSigTimelock.sol** - Multi-signature with timelock for governance
+- **MockRouter.sol** - Router for token swaps (for testing)
+- **MockERC20.sol** - Mock ERC20 token (for testing)
+- **MockOracle.sol** - Mock price oracle (for testing)
+
+## Contract Features
+
+### HAYQ Token
+
+1. **ERC20 Standard**
+   - Full ERC20 implementation with 18 decimals
+   - Snapshot support for governance
+   - Initial supply: 1,000,000 HAYQ
+
+2. **Staking**
+   - `stake(uint256 amount)` - Stake HAYQ tokens (burns from balance)
+   - `unstake(uint256 amount)` - Unstake HAYQ tokens (mints back to balance)
+   - `staked(address)` - View staked balance
+
+3. **Buyback**
+   - `buyback(uint256 tokenAmount, uint256 minOut)` - Execute buyback via DEX router (owner only)
+   - Swaps HAYQ for MiniMVP tokens through configured router
+   - Requires router to be set via `setRouter(address)`
+
+4. **Admin Functions**
+   - `setRouter(address)` - Set DEX router address
+   - `setMiniMVP(address)` - Set MiniMVP contract address
+   - `snapshot()` - Create balance snapshot for governance
+   - `mintMiniTokens(address, uint256)` - Mint MiniMVP tokens (owner only)
 
 ## Prerequisites
 
@@ -11,16 +56,21 @@ npm install --save-dev hardhat @openzeppelin/hardhat-upgrades @nomiclabs/hardhat
 npx hardhat init
 ```
 
-2. **Copy your HAYQ.sol contract** to `contracts/HAYQ.sol`
+2. **Copy contract files** from `src/contracts/` to your hardhat project `contracts/` folder
 
-3. **Create .env file**:
+3. **Install OpenZeppelin contracts**:
+```bash
+npm install @openzeppelin/contracts-upgradeable
+```
+
+4. **Create .env file**:
 ```env
 SEPOLIA_RPC_URL=https://rpc.sepolia.org
 PRIVATE_KEY=your_private_key_here
 ETHERSCAN_API_KEY=your_etherscan_key
 ```
 
-## Deployment Steps
+## Deployment
 
 ### Local Hardhat Network
 
@@ -29,20 +79,22 @@ ETHERSCAN_API_KEY=your_etherscan_key
 npx hardhat node
 ```
 
-2. **Deploy to local**:
+2. **Deploy contracts** using the provided script:
 ```bash
-npx hardhat run scripts/deploy.js --network localhost
+npx hardhat run scripts/deployAndCopy.js --network localhost
 ```
 
-3. **Copy ABI**:
-```bash
-node scripts/copy-abi.js
-```
+This will:
+- Deploy HAYQMiniMVP contract
+- Deploy HAYQ token contract
+- Deploy ERC20 Dividend Tracker
+- Connect all contracts together
+- Copy ABIs to frontend
 
-4. **Update contract address** in `src/config/contracts.ts`:
+3. **Update contract addresses** in `src/config/contracts.ts`:
 ```typescript
 local: {
-  address: 'YOUR_DEPLOYED_ADDRESS_HERE',
+  address: 'YOUR_HAYQ_PROXY_ADDRESS',
   chainId: 31337,
 }
 ```
@@ -71,34 +123,47 @@ sepolia: {
 }
 ```
 
-## Contract Functions Available
+## Contract Functions Reference
 
-### Core ERC20
+### HAYQ Token - Core ERC20
+- `name()` - Returns "HAYQ Token"
+- `symbol()` - Returns "HAYQ"
+- `decimals()` - Returns 18
+- `totalSupply()` - Get total token supply
 - `balanceOf(address)` - Get token balance
 - `transfer(address, amount)` - Transfer tokens
 - `approve(address, amount)` - Approve spending
 - `allowance(owner, spender)` - Check allowance
+- `transferFrom(address, address, amount)` - Transfer from approved
 
-### Staking
-- `stake(amount)` - Stake tokens
-- `unstake(amount)` - Unstake tokens
-- `getStakedBalance(address)` - Get staked balance
-- `getStakingRewards(address)` - Get pending rewards
+### HAYQ Token - Staking
+- `stake(uint256 amount)` - Stake tokens (burns from balance, adds to staked mapping)
+- `unstake(uint256 amount)` - Unstake tokens (mints back to balance, removes from staked)
+- `staked(address)` - Get staked balance for an address
 
-### Dividends
-- `claimDividends()` - Claim pending dividends
-- `getDividends(address)` - Check pending dividends
-- `totalDividendsDistributed()` - Total distributed
+### HAYQ Token - Buyback
+- `buyback(uint256 tokenAmount, uint256 minOut)` - Execute buyback (owner only)
+- `router()` - Get current DEX router address
+- `miniMVP()` - Get MiniMVP token address
 
-### Buyback
-- `buybackAndBurn()` - Execute buyback (owner only)
-- `getBuybackStats()` - Get buyback statistics
+### HAYQ Token - Admin
+- `setRouter(address)` - Set DEX router (owner only)
+- `setMiniMVP(address)` - Set MiniMVP contract (owner only)
+- `snapshot()` - Create balance snapshot (owner only)
+- `mintMiniTokens(address, uint256)` - Mint MiniMVP tokens (owner only)
 
-### Governance
-- `createProposal(description, duration)` - Create vote
-- `vote(proposalId, support)` - Cast vote
-- `executeProposal(proposalId)` - Execute proposal
-- `getProposal(proposalId)` - Get proposal details
+### Dividend Tracker
+- `distributeDividends(uint256)` - Distribute dividends to all holders
+- `withdrawDividend()` - Claim available dividends
+- `withdrawableDividendOf(address)` - Check claimable dividends
+- `accumulativeDividendOf(address)` - Check total accumulated dividends
+- `totalDividendsDistributed()` - Total distributed to date
+
+### MultiSigTimelock - Governance
+- `submit(address, uint256, bytes)` - Submit transaction (owner only)
+- `confirm(uint256)` - Confirm transaction (owner only)
+- `execute(uint256)` - Execute confirmed transaction after timelock (owner only)
+- `MIN_DELAY` - Returns 2 days (172800 seconds)
 
 ## Testing
 

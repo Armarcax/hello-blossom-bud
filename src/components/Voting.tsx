@@ -28,84 +28,8 @@ const Voting = () => {
   const [loading, setLoading] = useState(false);
   const [proposal, setProposal] = useState<ProposalData | null>(null);
 
-  useEffect(() => {
-    const fetchProposal = async () => {
-      if (!readContract) return;
-
-      try {
-        // Fetch active proposal (ID 0 for demo)
-        const proposalData = await readContract.getProposal(0);
-        
-        setProposal({
-          id: 0,
-          description: proposalData.description || "Increase Staking Rewards?",
-          yesVotes: ethers.utils.formatEther(proposalData.yesVotes || 0),
-          noVotes: ethers.utils.formatEther(proposalData.noVotes || 0),
-          deadline: proposalData.deadline?.toNumber() || 0,
-          executed: proposalData.executed || false,
-        });
-      } catch (error) {
-        console.error('Error fetching proposal:', error);
-      }
-    };
-
-    fetchProposal();
-    const interval = setInterval(fetchProposal, 30000);
-    return () => clearInterval(interval);
-  }, [readContract]);
-
-  const handleVote = async (support: boolean) => {
-    if (!contract || !isConnected || !proposal) {
-      toast({
-        title: "Error",
-        description: "Please connect wallet",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const tx = await contract.vote(proposal.id, support);
-      
-      toast({
-        title: "Transaction Sent",
-        description: "Waiting for confirmation...",
-      });
-
-      await tx.wait();
-      
-      toast({
-        title: "Success",
-        description: `Voted ${support ? "Yes" : "No"}`,
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: handleContractError(error),
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getVotePercentages = () => {
-    if (!proposal) return { yes: 0, no: 0 };
-    
-    const yes = parseFloat(proposal.yesVotes);
-    const no = parseFloat(proposal.noVotes);
-    const total = yes + no;
-    
-    if (total === 0) return { yes: 50, no: 50 };
-    
-    return {
-      yes: Math.round((yes / total) * 100),
-      no: Math.round((no / total) * 100),
-    };
-  };
-
-  const percentages = getVotePercentages();
+  // Note: Current HAYQ contract doesn't have governance functions
+  // Governance would be managed via MultiSigTimelock contract
 
   return (
     <Card className="component">
@@ -116,32 +40,17 @@ const Voting = () => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <p className="font-semibold">
-            Proposal: {proposal?.description || "Increase Staking Rewards?"}
-          </p>
-          <div className="flex gap-2">
-            <Button 
-              onClick={() => handleVote(true)} 
-              className="flex-1"
-              disabled={!isConnected || loading}
-            >
-              {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Yes ({percentages.yes}%)
-            </Button>
-            <Button 
-              onClick={() => handleVote(false)} 
-              variant="outline" 
-              className="flex-1"
-              disabled={!isConnected || loading}
-            >
-              {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              No ({percentages.no}%)
-            </Button>
-          </div>
+        <div className="text-sm text-muted-foreground">
+          Governance managed via MultiSigTimelock contract
+        </div>
+        <div className="text-sm text-muted-foreground">
+          Multi-signature with 2-day timelock for secure decision-making
         </div>
         <div className="text-sm text-muted-foreground">
           Voting power: <span className="font-bold">{parseFloat(stakedBalance).toFixed(2)} HAYQ</span>
+        </div>
+        <div className="text-sm text-muted-foreground">
+          <span className="font-bold">Integration pending</span> - MultiSigTimelock address needed
         </div>
       </CardContent>
     </Card>
