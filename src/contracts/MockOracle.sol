@@ -1,22 +1,28 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-contract MockOracle {
-    int256 private price;
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-    event PriceUpdated(int256 oldPrice, int256 newPrice);
+contract MockOracleV2 is Initializable, OwnableUpgradeable {
+    mapping(string => int256) private prices;
+    event PriceUpdated(string indexed symbol, int256 oldPrice, int256 newPrice);
 
-    constructor(int256 _price) {
-        price = _price;
+    function initialize() public initializer {
+        __Ownable_init();
     }
 
-    function setPrice(int256 _price) external {
-        int256 oldPrice = price;
-        price = _price;
-        emit PriceUpdated(oldPrice, _price);
+    function setPrice(string memory symbol, int256 _price) external onlyOwner {
+        int256 oldPrice = prices[symbol];
+        prices[symbol] = _price;
+        emit PriceUpdated(symbol, oldPrice, _price);
     }
 
-    function latestAnswer() external view returns (int256) {
-        return price;
+    function getPrice(string memory symbol) external view returns (int256) {
+        return prices[symbol];
+    }
+
+    function version() external pure returns (string memory) {
+        return "V2";
     }
 }

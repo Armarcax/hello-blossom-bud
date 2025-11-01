@@ -18,15 +18,21 @@ export const useBalance = () => {
 
     setLoading(true);
     try {
-      const [bal, staked] = await Promise.all([
+      const [bal, staked, vestingTotal, vestingReleased] = await Promise.all([
         readContract.balanceOf(account),
         readContract.staked(account),
+        readContract.vestingTotal(account),
+        readContract.vestingReleased(account),
       ]);
 
       setBalance(ethers.utils.formatEther(bal));
       setStakedBalance(ethers.utils.formatEther(staked));
-      // Rewards and dividends would come from separate dividend tracker contracts
-      setRewards('0');
+      
+      // Calculate vesting rewards (total - released)
+      const vestingReward = vestingTotal.sub(vestingReleased);
+      setRewards(ethers.utils.formatEther(vestingReward));
+      
+      // Dividends come from separate dividend tracker contracts
       setDividends('0');
     } catch (error) {
       console.error('Error fetching balances:', error);

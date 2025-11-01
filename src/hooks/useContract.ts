@@ -3,7 +3,7 @@ import { ethers } from 'ethers';
 import { getContractAddress } from '@/config/contracts';
 import { useWeb3 } from './useWeb3';
 
-// ABI for HAYQ Contract - Based on actual deployed contract
+// ABI for HAYQ Token (HAYQMiniMVP Contract)
 const HAYQ_ABI = [
   // ERC20 Standard
   'function name() view returns (string)',
@@ -20,6 +20,7 @@ const HAYQ_ABI = [
   'function stake(uint256 amount)',
   'function unstake(uint256 amount)',
   'function staked(address account) view returns (uint256)',
+  'function stakedBalanceOf(address user) view returns (uint256)',
   
   // Snapshot
   'function snapshot()',
@@ -27,12 +28,23 @@ const HAYQ_ABI = [
   // Buyback
   'function buyback(uint256 tokenAmount, uint256 minOut)',
   
-  // MiniMVP
+  // Vesting
+  'function setVestingVault(address _vault)',
+  'function setVestingVaultReadable(address _vault)',
+  'function createTeamVesting(address beneficiary, uint256 amount, uint64 start, uint64 duration)',
+  'function vestingTotal(address user) view returns (uint256)',
+  'function vestingReleased(address user) view returns (uint256)',
+  
+  // Router & MiniMVP
   'function router() view returns (address)',
   'function miniMVP() view returns (address)',
   'function setRouter(address _router)',
   'function setMiniMVP(address _mini)',
-  'function mintMiniTokens(address to, uint256 amount)',
+  'function vestingVault() view returns (address)',
+  'function allowanceToRouter(address user) view returns (uint256)',
+  
+  // Mint
+  'function mint(address to, uint256 amount)',
   
   // Events
   'event Transfer(address indexed from, address indexed to, uint256 value)',
@@ -40,6 +52,7 @@ const HAYQ_ABI = [
   'event Staked(address indexed user, uint256 amount)',
   'event Unstaked(address indexed user, uint256 amount)',
   'event Buyback(uint256 tokens, uint256 minOut)',
+  'event TeamVestingCreated(address indexed beneficiary, uint256 amount, uint64 start, uint64 duration)',
 ];
 
 export const useContract = () => {

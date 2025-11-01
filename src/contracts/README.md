@@ -1,49 +1,30 @@
 # HAYQ Smart Contracts
 
-## Overview
+## 📋 Overview
 
-This directory contains the HAYQ token smart contracts and related infrastructure.
+Complete ecosystem with HAYQ Token, Vesting, Dividend Trackers, Staking, MultiSig, and Registry.
 
-## Contracts
+## 🏗️ Contracts
 
-### Core Contracts
+### Core
+- **HAYQ.sol** (HAYQMiniMVP) - Main token with staking, vesting, snapshot
+- **VestingVault.sol** - Team vesting management
+- **Erc20DividendTrackerUpgradeable.sol** - Token dividend distribution
+- **EthDividendTrackerUpgradeable.sol** - ETH dividend distribution
+- **HAYQStaking.sol** - Separate staking with rewards
+- **MultiSigTimelock.sol** - Governance security
+- **Registry.sol** - Module management
 
-- **HAYQ.sol** - Main HAYQ ERC20 token with staking and buyback functionality
-- **HAYQMiniMVP.sol** - Mini MVP token for liquidity
-- **Erc20DividendTrackerUpgradeable.sol** - ERC20 dividend distribution tracker
+### Testing
+- **MockRouter.sol**, **MockERC20.sol**, **MockOracle.sol**
 
-### Supporting Contracts
+## 🚀 Deployment
 
-- **VestingVault.sol** - Token vesting functionality
-- **MultiSigTimelock.sol** - Multi-signature with timelock for governance
-- **MockRouter.sol** - Router for token swaps (for testing)
-- **MockERC20.sol** - Mock ERC20 token (for testing)
-- **MockOracle.sol** - Mock price oracle (for testing)
+```bash
+npx hardhat run src/contracts/scripts/deployAll.js --network localhost
+```
 
-## Contract Features
-
-### HAYQ Token
-
-1. **ERC20 Standard**
-   - Full ERC20 implementation with 18 decimals
-   - Snapshot support for governance
-   - Initial supply: 1,000,000 HAYQ
-
-2. **Staking**
-   - `stake(uint256 amount)` - Stake HAYQ tokens (burns from balance)
-   - `unstake(uint256 amount)` - Unstake HAYQ tokens (mints back to balance)
-   - `staked(address)` - View staked balance
-
-3. **Buyback**
-   - `buyback(uint256 tokenAmount, uint256 minOut)` - Execute buyback via DEX router (owner only)
-   - Swaps HAYQ for MiniMVP tokens through configured router
-   - Requires router to be set via `setRouter(address)`
-
-4. **Admin Functions**
-   - `setRouter(address)` - Set DEX router address
-   - `setMiniMVP(address)` - Set MiniMVP contract address
-   - `snapshot()` - Create balance snapshot for governance
-   - `mintMiniTokens(address, uint256)` - Mint MiniMVP tokens (owner only)
+Deploys all contracts, connects modules, saves addresses to `src/config/contracts.ts`
 
 ## Prerequisites
 

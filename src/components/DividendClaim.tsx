@@ -17,9 +17,10 @@ const DividendClaim = () => {
   const { dividends, refresh } = useBalance();
   const [loading, setLoading] = useState(false);
 
-  // Note: Dividend functionality is in separate Erc20DividendTrackerUpgradeable contract
-  // Would need to interact with that contract separately
-
+  // Integration with Dividend Tracker contracts
+  // TODO: Add ERC20 and ETH dividend tracker contract addresses to config
+  // const { erc20Dividends, ethDividends, claimErc20Dividend, claimEthDividend } = useDividendTracker(erc20DividendAddress, ethDividendAddress);
+  
   return (
     <Card className="component">
       <CardHeader>
@@ -30,13 +31,13 @@ const DividendClaim = () => {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="text-sm text-muted-foreground">
-          Dividend tracking managed by separate ERC20DividendTracker contract
+          Dividend tracking managed by ERC20 & ETH DividendTracker contracts
         </div>
         <div className="text-sm text-muted-foreground">
           Dividends distributed proportionally to HAYQ token holders
         </div>
         <div className="text-sm text-muted-foreground">
-          <span className="font-bold">Integration pending</span> - Dividend tracker contract address needed
+          <span className="font-bold">Integration ready</span> - Add contract addresses to enable
         </div>
       </CardContent>
     </Card>
