@@ -107,4 +107,14 @@ contract VestingVaultUpgradeable is Initializable, OwnableUpgradeable, Reentranc
         duration = v.duration;
         vested = _vestedAmount(v);
     }
+
+    // ✅ Interface implementation for HAYQ contract
+    function totalVested(address user) external view returns (uint256) {
+        VestingSchedule storage v = vestings[user];
+        return v.totalAmount;
+    }
+
+    function released(address user) external view returns (uint256) {
+        return vestings[user].released;
+    }
 }

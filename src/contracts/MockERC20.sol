@@ -14,7 +14,6 @@ contract MockERC20Upgradeable is Initializable, ERC20Upgradeable, OwnableUpgrade
     ) public initializer {
         __ERC20_init(name, symbol);
         __Ownable_init();
-
         _mint(msg.sender, initialSupply);
     }
 
