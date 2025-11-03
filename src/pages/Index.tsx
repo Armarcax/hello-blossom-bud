@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { useTheme } from "next-themes";
 import WalletConnect from "@/components/WalletConnect";
 import Balance from "@/components/Balance";
 import Transfer from "@/components/Transfer";
@@ -9,11 +10,13 @@ import Voting from "@/components/Voting";
 import LiveChart from "@/components/LiveChart";
 import DividendClaim from "@/components/DividendClaim";
 import EconomicGrowth from "@/components/EconomicGrowth";
+import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import hayqLogo from "@/assets/HAYQ_LOGO.png";
 
 const Index = () => {
   const { t, i18n } = useTranslation();
+  const { setTheme } = useTheme();
 
   const changeLanguage = (lng: string) => {
     i18n.changeLanguage(lng);
@@ -23,21 +26,33 @@ const Index = () => {
     <div className="min-h-screen bg-background p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-center gap-4 md:gap-8 mb-8">
-          <img 
-            src={hayqLogo} 
-            alt="HAYQ Logo" 
-            className="w-16 h-16 md:w-20 md:h-20 object-contain"
-            style={{ mixBlendMode: 'screen' }}
-          />
+          <button
+            onClick={() => setTheme("light")}
+            className="transition-transform hover:scale-110 active:scale-95 cursor-pointer focus:outline-none"
+            aria-label="Switch to light theme"
+          >
+            <img 
+              src={hayqLogo} 
+              alt="HAYQ Logo - Light Mode" 
+              className="w-16 h-16 md:w-20 md:h-20 object-contain"
+              style={{ mixBlendMode: 'screen' }}
+            />
+          </button>
           <h1 className="text-4xl md:text-5xl font-bold text-center bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
             Welcome to HAYQ Dashboard
           </h1>
-          <img 
-            src={hayqLogo} 
-            alt="HAYQ Logo" 
-            className="w-16 h-16 md:w-20 md:h-20 object-contain"
-            style={{ mixBlendMode: 'screen' }}
-          />
+          <button
+            onClick={() => setTheme("dark")}
+            className="transition-transform hover:scale-110 active:scale-95 cursor-pointer focus:outline-none"
+            aria-label="Switch to dark theme"
+          >
+            <img 
+              src={hayqLogo} 
+              alt="HAYQ Logo - Dark Mode" 
+              className="w-16 h-16 md:w-20 md:h-20 object-contain"
+              style={{ mixBlendMode: 'screen' }}
+            />
+          </button>
         </div>
 
         <div className="lang-switcher justify-center">
@@ -64,6 +79,8 @@ const Index = () => {
           <DividendClaim />
           <EconomicGrowth />
         </div>
+        
+        <Footer />
       </div>
     </div>
   );
