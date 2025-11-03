@@ -10,6 +10,7 @@ import LiveChart from "@/components/LiveChart";
 import DividendClaim from "@/components/DividendClaim";
 import EconomicGrowth from "@/components/EconomicGrowth";
 import { Button } from "@/components/ui/button";
+import hayqLogo from "@/assets/HAYQ_LOGO.png";
 
 const Index = () => {
   const { t, i18n } = useTranslation();
@@ -21,9 +22,23 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-4xl md:text-5xl font-bold text-center mb-8 bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
-          {t("welcome")}
-        </h1>
+        <div className="flex items-center justify-center gap-4 md:gap-8 mb-8">
+          <img 
+            src={hayqLogo} 
+            alt="HAYQ Logo" 
+            className="w-16 h-16 md:w-20 md:h-20 object-contain"
+            style={{ mixBlendMode: 'screen' }}
+          />
+          <h1 className="text-4xl md:text-5xl font-bold text-center bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+            Welcome to HAYQ Dashboard
+          </h1>
+          <img 
+            src={hayqLogo} 
+            alt="HAYQ Logo" 
+            className="w-16 h-16 md:w-20 md:h-20 object-contain"
+            style={{ mixBlendMode: 'screen' }}
+          />
+        </div>
 
         <div className="lang-switcher justify-center">
           <Button size="sm" variant="outline" onClick={() => changeLanguage("en")}>EN</Button>
