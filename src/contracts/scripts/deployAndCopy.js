@@ -18,10 +18,10 @@ async function main() {
     console.log("ETH Dividend Tracker deployed at:", ethTracker.address);
 
     // --- 2. Deploy HAYQ ---
-    const HAYQ = await ethers.getContractFactory("HAYQ");
+    const HAYQ = await ethers.getContractFactory("HAYQMiniMVP");
     const hayq = await upgrades.deployProxy(HAYQ, [ethers.constants.AddressZero, ethers.constants.AddressZero], { initializer: "initialize" });
     await hayq.deployed();
-    console.log("HAYQ deployed at:", hayq.address);
+    console.log("HAYQMiniMVP deployed at:", hayq.address);
 
     // --- 3. Connect dividend trackers to HAYQ ---
     await hayq.setDividendTrackerERC20(erc20Tracker.address);
@@ -33,7 +33,7 @@ async function main() {
     if (!fs.existsSync(abisDir)) fs.mkdirSync(abisDir, { recursive: true });
 
     const contracts = [
-        { name: "HAYQ", contract: hayq },
+        { name: "HAYQMiniMVP", contract: hayq },
         { name: "Erc20DividendTrackerUpgradeable", contract: erc20Tracker },
         { name: "EthDividendTrackerUpgradeable", contract: ethTracker }
     ];

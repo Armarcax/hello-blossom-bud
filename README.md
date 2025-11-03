@@ -9,6 +9,7 @@ HAYQ MiniMVP-ն լրիվ փաթեթ է ներառելով:
 - 📜 **Smart Contracts** - Solidity կոնտրակտներ (ERC20, Staking, Vesting, Dividends)
 - 🤖 **Telegram Bot** - 9 լեզուներով bot crypto signals-ով
 - 🧠 **AI Module** - Machine Learning գնի կանխատեսման համար
+- 📊 **Pine Script Strategy** - TradingView համար trading signals
 
 ## Project Structure
 
@@ -28,6 +29,9 @@ HAYQ MiniMVP-ն լրիվ փաթեթ է ներառելով:
 ├── ai/                     # AI/ML Module
 │   ├── predict.py          # Price prediction
 │   └── train_model.py      # Model training
+├── pine-script/            # TradingView Strategy
+│   ├── hayq_strategy.pine  # Main strategy
+│   └── signals/            # Signal modules
 └── README.md
 ```
 
@@ -105,6 +109,12 @@ npm run dev
 - pandas
 - numpy
 - joblib
+
+### Pine Script Strategy
+- Pine Script v5
+- TradingView platform
+- EMA/RSI indicators
+- Modular signal system
 
 ## Quick Start
 
@@ -220,6 +230,7 @@ python predict.py
 - [Smart Contracts README](src/contracts/README.md)
 - [Telegram Bot README](bot/README.md)
 - [AI Module README](ai/README.md)
+- [Pine Script Strategy README](pine-script/README.md)
 
 ## How can I deploy this project?
 

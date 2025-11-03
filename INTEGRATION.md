@@ -132,30 +132,36 @@ cd ai
 python predict.py
 ```
 
+### Test Pine Script Strategy
+1. Բացել TradingView
+2. Գտնել Pine Editor
+3. Կոպիրել `pine-script/hayq_strategy.pine` կոդը
+4. Ստեղծել ստրատեգիա և թեստավորել
+
 ## Architecture Overview
 
 ```
-┌─────────────────────────────────────────────────────┐
-│                  HAYQ Ecosystem                     │
-├─────────────────────────────────────────────────────┤
-│                                                     │
-│  ┌─────────────┐    ┌──────────────┐              │
-│  │  React DApp │    │ Telegram Bot │              │
-│  │  (Port 8080)│    │  (Python)    │              │
-│  └──────┬──────┘    └───────┬──────┘              │
-│         │                   │                      │
-│         │    ┌──────────────┴──────┐              │
-│         │    │                     │              │
-│         │    │  ┌────────────┐    │              │
-│         └────┼──┤ Blockchain │◄───┘              │
-│              │  │ (Hardhat)  │                    │
-│              │  └────────────┘                    │
-│              │                                     │
-│              │  ┌────────────┐                    │
-│              └──┤ AI Module  │                    │
-│                 │ (ML Model) │                    │
-│                 └────────────┘                    │
-└─────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────┐
+│                    HAYQ Ecosystem                        │
+├──────────────────────────────────────────────────────────┤
+│                                                          │
+│  ┌─────────────┐    ┌──────────────┐                    │
+│  │  React DApp │    │ Telegram Bot │                    │
+│  │  (Port 8080)│    │  (Python)    │                    │
+│  └──────┬──────┘    └───────┬──────┘                    │
+│         │                   │                            │
+│         │    ┌──────────────┴──────┐                    │
+│         │    │                     │                    │
+│         │    │  ┌────────────┐    │   ┌──────────────┐ │
+│         └────┼──┤ Blockchain │◄───┼───┤ Pine Script  │ │
+│              │  │ (Hardhat)  │    │   │ (TradingView)│ │
+│              │  └────────────┘    │   └──────────────┘ │
+│              │                     │                    │
+│              │  ┌────────────┐    │                    │
+│              └──┤ AI Module  │◄───┘                    │
+│                 │ (ML Model) │                          │
+│                 └────────────┘                          │
+└──────────────────────────────────────────────────────────┘
 ```
 
 ## Common Issues
@@ -221,7 +227,7 @@ pm2 start bot/main.py --interpreter python3 --name hayq-bot
 ## Next Steps
 
 1. **Customize Smart Contracts**
-   - Edit `src/contracts/HAYQ.sol`
+   - Edit `src/contracts/HAYQMiniMVP.sol`
    - Redeploy with `deployAndCopy.js`
 
 2. **Enhance Bot Features**
@@ -234,7 +240,12 @@ pm2 start bot/main.py --interpreter python3 --name hayq-bot
    - Train better models (LSTM, Transformer)
    - Implement real-time predictions
 
-4. **Security Audit**
+4. **Enhance Pine Script Strategy**
+   - Add more signal modules
+   - Optimize parameters via backtesting
+   - Integrate with bot webhooks
+
+5. **Security Audit**
    - Audit smart contracts
    - Secure bot token storage
    - Implement rate limiting
@@ -245,6 +256,7 @@ pm2 start bot/main.py --interpreter python3 --name hayq-bot
 - [Smart Contracts Guide](src/contracts/README.md)
 - [Telegram Bot Guide](bot/README.md)
 - [AI Module Guide](ai/README.md)
+- [Pine Script Strategy Guide](pine-script/README.md)
 
 ---
 
