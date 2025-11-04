@@ -23,64 +23,78 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex items-center justify-center gap-4 md:gap-8 mb-8">
-          <button
-            onClick={() => setTheme("light")}
-            className="transition-transform hover:scale-110 active:scale-95 cursor-pointer focus:outline-none"
-            aria-label="Switch to light theme"
-          >
-            <img 
-              src={hayqLogo} 
-              alt="HAYQ Logo - Light Mode" 
-              className="w-16 h-16 md:w-20 md:h-20 object-contain"
-              style={{ mixBlendMode: 'screen' }}
-            />
-          </button>
-          <h1 className="text-4xl md:text-5xl font-bold text-center bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
-            Welcome to HAYQ Dashboard
-          </h1>
-          <button
-            onClick={() => setTheme("dark")}
-            className="transition-transform hover:scale-110 active:scale-95 cursor-pointer focus:outline-none"
-            aria-label="Switch to dark theme"
-          >
-            <img 
-              src={hayqLogo} 
-              alt="HAYQ Logo - Dark Mode" 
-              className="w-16 h-16 md:w-20 md:h-20 object-contain"
-              style={{ mixBlendMode: 'screen' }}
-            />
-          </button>
-        </div>
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      {/* Background gradient glow */}
+      <div className="absolute inset-0 bg-[var(--gradient-glow)] pointer-events-none" />
+      
+      <div className="relative z-10 p-4 md:p-8">
+        <div className="max-w-7xl mx-auto">
+          {/* Header Section */}
+          <header className="mb-12">
+            <div className="flex items-center justify-center gap-4 md:gap-8 mb-6">
+              <button
+                onClick={() => setTheme("light")}
+                className="transition-all hover:scale-110 active:scale-95 cursor-pointer focus:outline-none group"
+                aria-label="Switch to light theme"
+              >
+                <img 
+                  src={hayqLogo} 
+                  alt="HAYQ Logo - Light Mode" 
+                  className="w-16 h-16 md:w-20 md:h-20 object-contain group-hover:drop-shadow-[0_0_15px_rgba(59,130,246,0.5)] transition-all"
+                  style={{ mixBlendMode: 'screen' }}
+                />
+              </button>
+              <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-center">
+                <span className="bg-clip-text text-transparent bg-[var(--gradient-primary)] drop-shadow-lg">
+                  Welcome to HAYQ Dashboard
+                </span>
+              </h1>
+              <button
+                onClick={() => setTheme("dark")}
+                className="transition-all hover:scale-110 active:scale-95 cursor-pointer focus:outline-none group"
+                aria-label="Switch to dark theme"
+              >
+                <img 
+                  src={hayqLogo} 
+                  alt="HAYQ Logo - Dark Mode" 
+                  className="w-16 h-16 md:w-20 md:h-20 object-contain group-hover:drop-shadow-[0_0_15px_rgba(168,85,247,0.5)] transition-all"
+                  style={{ mixBlendMode: 'screen' }}
+                />
+              </button>
+            </div>
 
-        <div className="lang-switcher justify-center">
-          <Button size="sm" variant="outline" onClick={() => changeLanguage("en")}>EN</Button>
-          <Button size="sm" variant="outline" onClick={() => changeLanguage("hy")}>HY</Button>
-          <Button size="sm" variant="outline" onClick={() => changeLanguage("ru")}>RU</Button>
-          <Button size="sm" variant="outline" onClick={() => changeLanguage("fr")}>FR</Button>
-          <Button size="sm" variant="outline" onClick={() => changeLanguage("es")}>ES</Button>
-          <Button size="sm" variant="outline" onClick={() => changeLanguage("de")}>DE</Button>
-          <Button size="sm" variant="outline" onClick={() => changeLanguage("zh")}>ZH</Button>
-          <Button size="sm" variant="outline" onClick={() => changeLanguage("ja")}>JA</Button>
-          <Button size="sm" variant="outline" onClick={() => changeLanguage("ar")}>AR</Button>
-        </div>
+            {/* Language Switcher */}
+            <div className="flex justify-center gap-2 flex-wrap max-w-2xl mx-auto">
+              {["en", "hy", "ru", "fr", "es", "de", "zh", "ja", "ar"].map((lang) => (
+                <Button 
+                  key={lang}
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => changeLanguage(lang)}
+                  className="hover:bg-primary hover:text-primary-foreground transition-all"
+                >
+                  {lang.toUpperCase()}
+                </Button>
+              ))}
+            </div>
+          </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <WalletConnect />
-          <Balance />
-          <Transfer />
-          <Stake />
-          <Unstake />
-          <Buyback />
-          <Voting />
-          <LiveChart />
-          <DividendClaim />
-          <EconomicGrowth />
+          {/* Main Dashboard Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <WalletConnect />
+            <Balance />
+            <Transfer />
+            <Stake />
+            <Unstake />
+            <Buyback />
+            <Voting />
+            <LiveChart />
+            <DividendClaim />
+            <EconomicGrowth />
+          </div>
+          
+          <Footer />
         </div>
-        
-        <Footer />
       </div>
     </div>
   );
