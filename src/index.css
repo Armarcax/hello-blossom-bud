@@ -29,10 +29,16 @@ All colors MUST be HSL.
     --ring: 222 100% 50%;
     --radius: 0.5rem;
     
+    /* Armenian Flag Colors - Light Mode */
+    --armenia-red: 0 75% 65%;
+    --armenia-blue: 210 70% 65%;
+    --armenia-orange: 30 85% 65%;
+    
     /* Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(222 100% 50%), hsl(280 100% 65%));
     --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(210 40% 98%));
-    --gradient-glow: radial-gradient(circle at 50% 0%, hsl(222 100% 50% / 0.15), transparent 70%);
+    --gradient-glow: radial-gradient(circle at 50% 0%, hsl(var(--armenia-red) / 0.15), hsl(var(--armenia-blue) / 0.15), hsl(var(--armenia-orange) / 0.15));
+    --gradient-background: linear-gradient(135deg, hsl(var(--armenia-red) / 0.08) 0%, hsl(var(--armenia-blue) / 0.08) 50%, hsl(var(--armenia-orange) / 0.08) 100%);
     
     /* Shadows */
     --shadow-sm: 0 1px 2px 0 hsl(222 47% 11% / 0.05);
@@ -71,10 +77,16 @@ All colors MUST be HSL.
     --input: 217 33% 17%;
     --ring: 222 100% 60%;
     
+    /* Armenian Flag Colors - Dark Mode */
+    --armenia-red: 0 70% 35%;
+    --armenia-blue: 210 65% 30%;
+    --armenia-orange: 30 75% 40%;
+    
     /* Dark Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(222 100% 60%), hsl(280 100% 70%));
     --gradient-card: linear-gradient(145deg, hsl(222 47% 10%), hsl(222 47% 12%));
-    --gradient-glow: radial-gradient(circle at 50% 0%, hsl(222 100% 60% / 0.2), transparent 70%);
+    --gradient-glow: radial-gradient(circle at 50% 0%, hsl(var(--armenia-red) / 0.25), hsl(var(--armenia-blue) / 0.25), hsl(var(--armenia-orange) / 0.25));
+    --gradient-background: linear-gradient(135deg, hsl(var(--armenia-red) / 0.15) 0%, hsl(var(--armenia-blue) / 0.15) 50%, hsl(var(--armenia-orange) / 0.15) 100%);
     
     /* Dark Shadows */
     --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.3);

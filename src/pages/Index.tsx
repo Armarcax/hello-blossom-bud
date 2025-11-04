@@ -24,7 +24,8 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
-      {/* Background gradient glow */}
+      {/* Armenian flag inspired background */}
+      <div className="absolute inset-0 bg-[var(--gradient-background)] pointer-events-none" />
       <div className="absolute inset-0 bg-[var(--gradient-glow)] pointer-events-none" />
       
       <div className="relative z-10 p-4 md:p-8">
@@ -45,7 +46,7 @@ const Index = () => {
                 />
               </button>
               <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-center">
-                <span className="bg-clip-text text-transparent bg-[var(--gradient-primary)] drop-shadow-lg">
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-[hsl(var(--armenia-red))] via-[hsl(var(--armenia-blue))] to-[hsl(var(--armenia-orange))] drop-shadow-lg animate-fade-in">
                   Welcome to HAYQ Dashboard
                 </span>
               </h1>
@@ -69,9 +70,9 @@ const Index = () => {
                 <Button 
                   key={lang}
                   size="sm" 
-                  variant="outline" 
+                  variant="ghost" 
                   onClick={() => changeLanguage(lang)}
-                  className="hover:bg-primary hover:text-primary-foreground transition-all"
+                  className="rounded-full border-2 border-primary/20 bg-transparent hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all hover:scale-110"
                 >
                   {lang.toUpperCase()}
                 </Button>
