@@ -1,5 +1,8 @@
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "next-themes";
+import { useAuth } from "@/contexts/AuthContext";
 import WalletConnect from "@/components/WalletConnect";
 import Balance from "@/components/Balance";
 import Transfer from "@/components/Transfer";
@@ -13,14 +16,32 @@ import EconomicGrowth from "@/components/EconomicGrowth";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import hayqLogo from "@/assets/HAYQ_LOGO.png";
+import { LogOut, Shield } from "lucide-react";
 
 const Index = () => {
+  const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const { setTheme } = useTheme();
+  const { user, isAdmin, signOut, loading } = useAuth();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate('/auth');
+    }
+  }, [user, loading, navigate]);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/auth');
+  };
 
   const changeLanguage = (lng: string) => {
     i18n.changeLanguage(lng);
   };
+
+  if (loading || !user) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
@@ -45,11 +66,34 @@ const Index = () => {
                   style={{ mixBlendMode: 'screen' }}
                 />
               </button>
-              <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-center">
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-[hsl(var(--armenia-red))] via-[hsl(var(--armenia-blue))] to-[hsl(var(--armenia-orange))] drop-shadow-lg animate-fade-in">
-                  Welcome to HAYQ Dashboard
-                </span>
-              </h1>
+              <div className="flex items-center gap-4">
+                <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-center flex-1">
+                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-[hsl(var(--armenia-red))] via-[hsl(var(--armenia-blue))] to-[hsl(var(--armenia-orange))] drop-shadow-lg animate-fade-in">
+                    Welcome to HAYQ Dashboard
+                  </span>
+                </h1>
+                <div className="flex gap-2">
+                  {isAdmin && (
+                    <Button
+                      size="sm"
+                      onClick={() => navigate('/admin')}
+                      className="rounded-full"
+                    >
+                      <Shield className="h-4 w-4 mr-2" />
+                      Admin
+                    </Button>
+                  )}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleSignOut}
+                    className="rounded-full"
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Ելք
+                  </Button>
+                </div>
+              </div>
               <button
                 onClick={() => setTheme("dark")}
                 className="transition-all hover:scale-110 active:scale-95 cursor-pointer focus:outline-none group"
