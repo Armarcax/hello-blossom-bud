@@ -8,7 +8,7 @@ export const CONTRACTS = {
     },
     // Sepolia Testnet
     sepolia: {
-      address: '', // Will be filled after deployment
+      address: '0x7E5c8baC4447D8FA7010AEc8D400Face1b1BEC83',
       chainId: 11155111,
     },
   },
