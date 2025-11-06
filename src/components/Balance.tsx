@@ -3,12 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Coins, TrendingUp, Gift, RefreshCw } from "lucide-react";
 import { useWeb3Context } from "@/contexts/Web3Context";
 import { useBalance } from "@/hooks/useBalance";
+import { useContract } from "@/hooks/useContract";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const Balance = () => {
   const { t } = useTranslation();
   const { isConnected } = useWeb3Context();
+  const { readContract } = useContract();
   const { balance, stakedBalance, rewards, dividends, loading, refresh } = useBalance();
 
   if (!isConnected) {
@@ -41,7 +43,11 @@ const Balance = () => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {loading && !balance ? (
+        {!readContract && isConnected ? (
+          <div className="text-sm text-destructive">
+            HAYQ պայմանագիրը տեղադրված չէ այս ցանցում։ Խնդրում ենք միանալ Hardhat Local (Chain ID: 31337) կամ Sepolia ցանցին:
+          </div>
+        ) : loading && !balance ? (
           <Skeleton className="h-12 w-full" />
         ) : (
           <div className="space-y-3">

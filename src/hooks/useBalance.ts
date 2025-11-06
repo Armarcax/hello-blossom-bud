@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import { useContract } from './useContract';
-import { useWeb3 } from './useWeb3';
+import { useWeb3Context } from '@/contexts/Web3Context';
 
 export const useBalance = () => {
   const [balance, setBalance] = useState<string>('0');
@@ -11,10 +11,25 @@ export const useBalance = () => {
   const [loading, setLoading] = useState(false);
   
   const { readContract } = useContract();
-  const { account, isConnected } = useWeb3();
+  const { account, isConnected } = useWeb3Context();
 
   const fetchBalances = async () => {
-    if (!readContract || !account || !isConnected) return;
+    if (!isConnected || !account) {
+      setBalance('0');
+      setStakedBalance('0');
+      setRewards('0');
+      setDividends('0');
+      return;
+    }
+
+    if (!readContract) {
+      console.error('Contract not available on this network');
+      setBalance('0');
+      setStakedBalance('0');
+      setRewards('0');
+      setDividends('0');
+      return;
+    }
 
     setLoading(true);
     try {
@@ -36,6 +51,10 @@ export const useBalance = () => {
       setDividends('0');
     } catch (error) {
       console.error('Error fetching balances:', error);
+      setBalance('0');
+      setStakedBalance('0');
+      setRewards('0');
+      setDividends('0');
     } finally {
       setLoading(false);
     }
