@@ -33,19 +33,34 @@ export const useBalance = () => {
 
     setLoading(true);
     try {
-      const [bal, staked, vestingTotal, vestingReleased] = await Promise.all([
-        readContract.balanceOf(account),
-        readContract.staked(account),
-        readContract.vestingTotal(account),
-        readContract.vestingReleased(account),
-      ]);
-
+      // Always fetch ERC20 balance
+      const bal = await readContract.balanceOf(account);
       setBalance(ethers.utils.formatEther(bal));
-      setStakedBalance(ethers.utils.formatEther(staked));
-      
-      // Calculate vesting rewards (total - released)
-      const vestingReward = vestingTotal.sub(vestingReleased);
-      setRewards(ethers.utils.formatEther(vestingReward));
+
+      // Try to fetch staked balance if function exists
+      let stakedVal = ethers.constants.Zero as any;
+      if ((readContract as any).functions?.staked) {
+        try {
+          stakedVal = await readContract.staked(account);
+        } catch (e) {
+          console.warn('Staked fetch failed (optional):', e);
+        }
+      }
+      setStakedBalance(ethers.utils.formatEther(stakedVal));
+
+      // Try to fetch vesting rewards if functions exist
+      let rewardsVal = ethers.constants.Zero as any;
+      const hasVesting = (readContract as any).functions?.vestingTotal && (readContract as any).functions?.vestingReleased;
+      if (hasVesting) {
+        try {
+          const vestingTotal = await readContract.vestingTotal(account);
+          const vestingReleased = await readContract.vestingReleased(account);
+          rewardsVal = vestingTotal.sub(vestingReleased);
+        } catch (e) {
+          console.warn('Vesting fetch failed (optional):', e);
+        }
+      }
+      setRewards(ethers.utils.formatEther(rewardsVal));
       
       // Dividends come from separate dividend tracker contracts
       setDividends('0');
