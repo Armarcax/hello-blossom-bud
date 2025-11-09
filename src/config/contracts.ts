@@ -1,4 +1,4 @@
-// HAYQ Contract Configuration
+// HAYQ Contract Configuration (Updated)
 export const CONTRACTS = {
   HAYQ: {
     // Local Hardhat
@@ -6,9 +6,9 @@ export const CONTRACTS = {
       address: '0x5FbDB2315678afecb367f032d93F642f64180aa3',
       chainId: 31337,
     },
-    // Sepolia Testnet
+    // Sepolia Testnet — UPDATED
     sepolia: {
-      address: '0x7E5c8baC4447D8FA7010AEc8D400Face1b1BEC83',
+      address: '0x7E5c8baC4447D8FA7010AEc8D400Face1b1BEC83', // Reward token (HAYQ main)
       chainId: 11155111,
     },
   },
@@ -41,6 +41,14 @@ export const AUXILIARY_CONTRACTS = {
   Registry: {
     local: '',
     sepolia: '0xe0E4126c92De0C69bc69FEd3BeeE5072528E8661',
+  },
+  Oracle: {
+    local: '',
+    sepolia: '0x4f562cc34dd3b4C61f691B643BA6aA24a788d689',
+  },
+  MockRouter: {
+    local: '',
+    sepolia: '0x7Bb6CB46524b47205124C9AAD86eE5ccBCE73c6c',
   },
 };
 
