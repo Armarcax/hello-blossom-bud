@@ -1,14 +1,12 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { TrendingUp, Loader2 } from "lucide-react";
+import { TrendingUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useWeb3Context } from "@/contexts/Web3Context";
 import { useContract } from "@/hooks/useContract";
 import { useBalance } from "@/hooks/useBalance";
 import { parseTokenAmount, handleContractError } from "@/utils/contractHelpers";
+import { DashboardCard, TokenAmountInput, ActionButton, ConnectWalletPrompt } from "@/components/shared";
 
 const Stake = () => {
   const { t } = useTranslation();
@@ -51,7 +49,7 @@ const Stake = () => {
     try {
       const amountWei = parseTokenAmount(amount);
       const tx = await contract.stake(amountWei);
-      
+
       toast({
         title: "Transaction Sent",
         description: "Staking in progress...",
@@ -66,7 +64,7 @@ const Stake = () => {
 
       setAmount("");
       refresh();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Staking Failed",
         description: handleContractError(error),
@@ -77,56 +75,36 @@ const Stake = () => {
     }
   };
 
-  const setMaxAmount = () => {
-    setAmount(balance);
-  };
-
   return (
-    <Card className="component">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <TrendingUp className="h-5 w-5" />
-          {t("stake")}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <span>Available: {parseFloat(balance).toFixed(2)} HAYQ</span>
-            <Button variant="link" size="sm" onClick={setMaxAmount} className="h-auto p-0">
-              Max
-            </Button>
-          </div>
-          <Input
-            type="number"
-            placeholder="Amount to Stake"
+    <DashboardCard title={t("stake")} icon={TrendingUp}>
+      {!isConnected ? (
+        <ConnectWalletPrompt message="Connect wallet to stake" />
+      ) : (
+        <div className="space-y-4">
+          <TokenAmountInput
             value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            disabled={loading || !isConnected}
+            onChange={setAmount}
+            maxValue={balance}
+            placeholder="Amount to Stake"
+            disabled={loading}
           />
+          
+          <ActionButton
+            onClick={handleStake}
+            loading={loading}
+            disabled={!isConnected}
+            icon={TrendingUp}
+            loadingText="Staking..."
+          >
+            {t("stake")}
+          </ActionButton>
+
+          <div className="text-sm text-muted-foreground">
+            Current APY: <span className="text-primary font-bold">12.5%</span>
+          </div>
         </div>
-        <Button 
-          onClick={handleStake} 
-          className="w-full"
-          disabled={loading || !isConnected}
-        >
-          {loading ? (
-            <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Staking...
-            </>
-          ) : (
-            <>
-              <TrendingUp className="h-4 w-4 mr-2" />
-              {t("stake")}
-            </>
-          )}
-        </Button>
-        <div className="text-sm text-muted-foreground">
-          Current APY: <span className="text-primary font-bold">12.5%</span>
-        </div>
-      </CardContent>
-    </Card>
+      )}
+    </DashboardCard>
   );
 };
 
