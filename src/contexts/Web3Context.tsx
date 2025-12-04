@@ -1,4 +1,4 @@
-import { createContext, useContext, ReactNode } from 'react';
+import { createContext, useContext, ReactNode, useMemo } from 'react';
 import { useWeb3 } from '@/hooks/useWeb3';
 import { ethers } from 'ethers';
 
@@ -8,8 +8,10 @@ interface Web3ContextType {
   account: string;
   chainId: number | null;
   isConnected: boolean;
+  isConnecting: boolean;
   connectWallet: () => Promise<void>;
   disconnectWallet: () => void;
+  shortAddress: string;
 }
 
 const Web3Context = createContext<Web3ContextType | null>(null);
@@ -17,8 +19,15 @@ const Web3Context = createContext<Web3ContextType | null>(null);
 export const Web3Provider = ({ children }: { children: ReactNode }) => {
   const web3 = useWeb3();
 
+  const contextValue = useMemo(() => ({
+    ...web3,
+    shortAddress: web3.account 
+      ? `${web3.account.slice(0, 6)}...${web3.account.slice(-4)}`
+      : '',
+  }), [web3]);
+
   return (
-    <Web3Context.Provider value={web3}>
+    <Web3Context.Provider value={contextValue}>
       {children}
     </Web3Context.Provider>
   );
