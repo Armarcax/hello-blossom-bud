@@ -13,7 +13,7 @@ const Stake = () => {
   const { toast } = useToast();
   const { isConnected } = useWeb3Context();
   const { contract } = useContract();
-  const { balance, refresh } = useBalance();
+  const { balance, refresh, optimisticStake, rollback, getCachedData } = useBalance();
   const [amount, setAmount] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -45,9 +45,16 @@ const Stake = () => {
       return;
     }
 
+    // Save current state for potential rollback
+    const previousData = getCachedData();
+    
     setLoading(true);
     try {
       const amountWei = parseTokenAmount(amount);
+      
+      // Apply optimistic update immediately
+      optimisticStake(amount);
+      
       const tx = await contract.stake(amountWei);
 
       toast({
@@ -63,8 +70,12 @@ const Stake = () => {
       });
 
       setAmount("");
+      // Refresh to get actual on-chain values
       refresh();
     } catch (error: unknown) {
+      // Rollback optimistic update on error
+      rollback(previousData);
+      
       toast({
         title: "Staking Failed",
         description: handleContractError(error),
