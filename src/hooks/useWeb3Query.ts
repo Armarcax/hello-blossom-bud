@@ -1,7 +1,14 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ethers } from 'ethers';
+import { useCallback } from 'react';
 import { useWeb3Context } from '@/contexts/Web3Context';
 import { useContract } from './useContract';
+
+export interface BalanceData {
+  balance: string;
+  stakedBalance: string;
+  rewards: string;
+}
 
 // Query key factory for consistent cache keys
 export const web3Keys = {
@@ -12,7 +19,7 @@ export const web3Keys = {
   vesting: (account: string) => [...web3Keys.all, 'vesting', account] as const,
 };
 
-// Optimized balance fetching with caching
+// Optimized balance fetching with caching and optimistic updates
 export const useBalanceQuery = () => {
   const { account, isConnected } = useWeb3Context();
   const { readContract } = useContract();
@@ -20,7 +27,7 @@ export const useBalanceQuery = () => {
 
   const query = useQuery({
     queryKey: web3Keys.balances(account),
-    queryFn: async () => {
+    queryFn: async (): Promise<BalanceData> => {
       if (!readContract || !account) {
         return { balance: '0', stakedBalance: '0', rewards: '0' };
       }
@@ -44,14 +51,52 @@ export const useBalanceQuery = () => {
       };
     },
     enabled: isConnected && !!readContract && !!account,
-    staleTime: 10000, // 10 seconds
-    gcTime: 60000, // 1 minute cache
-    refetchInterval: 15000, // Auto-refresh every 15s
+    staleTime: 10000,
+    gcTime: 60000,
+    refetchInterval: 15000,
   });
 
-  const invalidate = () => {
+  const invalidate = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: web3Keys.balances(account) });
-  };
+  }, [queryClient, account]);
+
+  // Optimistic update for staking: decrease balance, increase stakedBalance
+  const optimisticStake = useCallback((amount: string) => {
+    const amountNum = parseFloat(amount);
+    queryClient.setQueryData<BalanceData>(web3Keys.balances(account), (old) => {
+      if (!old) return old;
+      return {
+        ...old,
+        balance: Math.max(0, parseFloat(old.balance) - amountNum).toString(),
+        stakedBalance: (parseFloat(old.stakedBalance) + amountNum).toString(),
+      };
+    });
+  }, [queryClient, account]);
+
+  // Optimistic update for unstaking: increase balance, decrease stakedBalance
+  const optimisticUnstake = useCallback((amount: string) => {
+    const amountNum = parseFloat(amount);
+    queryClient.setQueryData<BalanceData>(web3Keys.balances(account), (old) => {
+      if (!old) return old;
+      return {
+        ...old,
+        balance: (parseFloat(old.balance) + amountNum).toString(),
+        stakedBalance: Math.max(0, parseFloat(old.stakedBalance) - amountNum).toString(),
+      };
+    });
+  }, [queryClient, account]);
+
+  // Rollback to previous data on error
+  const rollback = useCallback((previousData: BalanceData | undefined) => {
+    if (previousData) {
+      queryClient.setQueryData(web3Keys.balances(account), previousData);
+    }
+  }, [queryClient, account]);
+
+  // Get current cached data for rollback
+  const getCachedData = useCallback((): BalanceData | undefined => {
+    return queryClient.getQueryData<BalanceData>(web3Keys.balances(account));
+  }, [queryClient, account]);
 
   return {
     ...query,
@@ -59,6 +104,10 @@ export const useBalanceQuery = () => {
     stakedBalance: query.data?.stakedBalance ?? '0',
     rewards: query.data?.rewards ?? '0',
     invalidate,
+    optimisticStake,
+    optimisticUnstake,
+    rollback,
+    getCachedData,
   };
 };
 
@@ -90,9 +139,9 @@ export const useTokenMetrics = () => {
       };
     },
     enabled: !!readContract,
-    staleTime: 30000, // 30 seconds
-    gcTime: 120000, // 2 minute cache
-    refetchInterval: 60000, // Auto-refresh every minute
+    staleTime: 30000,
+    gcTime: 120000,
+    refetchInterval: 60000,
   });
 };
 
