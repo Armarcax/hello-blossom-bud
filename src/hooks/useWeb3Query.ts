@@ -21,8 +21,8 @@ export const web3Keys = {
 
 // Optimized balance fetching with caching and optimistic updates
 export const useBalanceQuery = () => {
-  const { account, isConnected } = useWeb3Context();
-  const { readContract } = useContract();
+  const { account, isConnected, isWrongNetwork } = useWeb3Context();
+  const { readContract, tokenInfo } = useContract();
   const queryClient = useQueryClient();
 
   const query = useQuery({
@@ -32,25 +32,34 @@ export const useBalanceQuery = () => {
         return { balance: '0', stakedBalance: '0', rewards: '0' };
       }
 
-      const [balance, stakedBalance, vestingData] = await Promise.all([
-        readContract.balanceOf(account).catch(() => ethers.constants.Zero),
-        readContract.staked?.(account).catch(() => ethers.constants.Zero) ?? Promise.resolve(ethers.constants.Zero),
-        Promise.all([
-          readContract.vestingTotal?.(account).catch(() => ethers.constants.Zero) ?? Promise.resolve(ethers.constants.Zero),
-          readContract.vestingReleased?.(account).catch(() => ethers.constants.Zero) ?? Promise.resolve(ethers.constants.Zero),
-        ]),
-      ]);
+      try {
+        const [balance, stakedBalance, vestingData] = await Promise.all([
+          readContract.balanceOf(account).catch(() => ethers.constants.Zero),
+          readContract.staked?.(account).catch(() => ethers.constants.Zero) ?? Promise.resolve(ethers.constants.Zero),
+          Promise.all([
+            readContract.vestingTotal?.(account).catch(() => ethers.constants.Zero) ?? Promise.resolve(ethers.constants.Zero),
+            readContract.vestingReleased?.(account).catch(() => ethers.constants.Zero) ?? Promise.resolve(ethers.constants.Zero),
+          ]),
+        ]);
 
-      const [vestingTotal, vestingReleased] = vestingData;
-      const rewards = vestingTotal.sub(vestingReleased);
+        const [vestingTotal, vestingReleased] = vestingData;
+        const rewards = vestingTotal.sub(vestingReleased);
 
-      return {
-        balance: ethers.utils.formatEther(balance),
-        stakedBalance: ethers.utils.formatEther(stakedBalance),
-        rewards: ethers.utils.formatEther(rewards),
-      };
+        // Use token decimals from contract
+        const decimals = tokenInfo.decimals;
+        const formatValue = (val: ethers.BigNumber) => ethers.utils.formatUnits(val, decimals);
+
+        return {
+          balance: formatValue(balance),
+          stakedBalance: formatValue(stakedBalance),
+          rewards: formatValue(rewards),
+        };
+      } catch (error) {
+        console.error('Failed to fetch balances:', error);
+        return { balance: '0', stakedBalance: '0', rewards: '0' };
+      }
     },
-    enabled: isConnected && !!readContract && !!account,
+    enabled: isConnected && !isWrongNetwork && !!readContract && !!account,
     staleTime: 10000,
     gcTime: 60000,
     refetchInterval: 15000,
@@ -113,32 +122,38 @@ export const useBalanceQuery = () => {
 
 // Token metrics for charts with caching
 export const useTokenMetrics = () => {
-  const { isConnected } = useWeb3Context();
-  const { readContract } = useContract();
+  const { isConnected, isWrongNetwork } = useWeb3Context();
+  const { readContract, tokenInfo } = useContract();
 
   return useQuery({
     queryKey: web3Keys.tokenMetrics(),
     queryFn: async () => {
       if (!readContract) {
-        return { totalSupply: '0', stakingRatio: 0 };
+        return { totalSupply: '0', stakingRatio: 0, timestamp: Date.now() };
       }
 
-      const [totalSupply, totalStaked] = await Promise.all([
-        readContract.totalSupply().catch(() => ethers.constants.Zero),
-        readContract.stakedBalanceOf?.('0x0000000000000000000000000000000000000000').catch(() => ethers.constants.Zero) ?? Promise.resolve(ethers.constants.Zero),
-      ]);
+      try {
+        const [totalSupply, totalStaked] = await Promise.all([
+          readContract.totalSupply().catch(() => ethers.constants.Zero),
+          readContract.stakedBalanceOf?.('0x0000000000000000000000000000000000000000').catch(() => ethers.constants.Zero) ?? Promise.resolve(ethers.constants.Zero),
+        ]);
 
-      const supply = parseFloat(ethers.utils.formatEther(totalSupply));
-      const staked = parseFloat(ethers.utils.formatEther(totalStaked));
-      const stakingRatio = supply > 0 ? (staked / supply) * 100 : 0;
+        const decimals = tokenInfo.decimals;
+        const supply = parseFloat(ethers.utils.formatUnits(totalSupply, decimals));
+        const staked = parseFloat(ethers.utils.formatUnits(totalStaked, decimals));
+        const stakingRatio = supply > 0 ? (staked / supply) * 100 : 0;
 
-      return {
-        totalSupply: ethers.utils.formatEther(totalSupply),
-        stakingRatio: Math.round(stakingRatio * 10) / 10,
-        timestamp: Date.now(),
-      };
+        return {
+          totalSupply: ethers.utils.formatUnits(totalSupply, decimals),
+          stakingRatio: Math.round(stakingRatio * 10) / 10,
+          timestamp: Date.now(),
+        };
+      } catch (error) {
+        console.error('Failed to fetch token metrics:', error);
+        return { totalSupply: '0', stakingRatio: 0, timestamp: Date.now() };
+      }
     },
-    enabled: !!readContract,
+    enabled: isConnected && !isWrongNetwork && !!readContract,
     staleTime: 30000,
     gcTime: 120000,
     refetchInterval: 60000,

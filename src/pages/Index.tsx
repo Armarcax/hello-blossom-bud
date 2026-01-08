@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { DashboardLayout } from "@/components/layout";
+import NetworkGuard from "@/components/NetworkGuard";
 import WalletConnect from "@/components/WalletConnect";
 import Balance from "@/components/Balance";
 import Transfer from "@/components/Transfer";
@@ -28,20 +29,22 @@ const Index = () => {
   }
 
   return (
-    <DashboardLayout>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <WalletConnect />
-        <Balance />
-        <Transfer />
-        <Stake />
-        <Unstake />
-        <Buyback />
-        <Voting />
-        <LiveChart />
-        <DividendClaim />
-        <EconomicGrowth />
-      </div>
-    </DashboardLayout>
+    <NetworkGuard>
+      <DashboardLayout>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <WalletConnect />
+          <Balance />
+          <Transfer />
+          <Stake />
+          <Unstake />
+          <Buyback />
+          <Voting />
+          <LiveChart />
+          <DividendClaim />
+          <EconomicGrowth />
+        </div>
+      </DashboardLayout>
+    </NetworkGuard>
   );
 };
 

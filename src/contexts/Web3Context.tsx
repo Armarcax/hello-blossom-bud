@@ -9,9 +9,15 @@ interface Web3ContextType {
   chainId: number | null;
   isConnected: boolean;
   isConnecting: boolean;
+  isWrongNetwork: boolean;
+  nativeBalance: string;
   connectWallet: () => Promise<void>;
   disconnectWallet: () => void;
+  switchNetwork: () => Promise<boolean>;
+  refreshNativeBalance: () => Promise<void>;
   shortAddress: string;
+  targetChainId: number;
+  networkName: string;
 }
 
 const Web3Context = createContext<Web3ContextType | null>(null);
