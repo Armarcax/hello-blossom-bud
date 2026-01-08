@@ -11,9 +11,17 @@ export const useBalance = () => {
     balance: query.balance,
     stakedBalance: query.stakedBalance,
     rewards: query.rewards,
+
+    // raw debug values
+    rawTokenBalance: query.rawTokenBalance,
+    rawStakedBalance: query.rawStakedBalance,
+    rawRewards: query.rawRewards,
+    decimalsUsed: query.decimalsUsed,
+
     dividends: '0', // Dividends come from separate dividend tracker contracts
     loading: query.isLoading,
     refresh: query.invalidate,
+
     // Optimistic update helpers
     optimisticStake: query.optimisticStake,
     optimisticUnstake: query.optimisticUnstake,

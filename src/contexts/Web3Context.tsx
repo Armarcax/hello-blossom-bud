@@ -11,6 +11,7 @@ interface Web3ContextType {
   isConnecting: boolean;
   isWrongNetwork: boolean;
   nativeBalance: string;
+  nativeBalanceWei: string;
   connectWallet: () => Promise<void>;
   disconnectWallet: () => void;
   switchNetwork: () => Promise<boolean>;

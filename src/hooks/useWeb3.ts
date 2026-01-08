@@ -12,11 +12,14 @@ export interface Web3State {
   isConnected: boolean;
   isConnecting: boolean;
   isWrongNetwork: boolean;
-  nativeBalance: string;
+  nativeBalance: string; // formatted (ETH/BNB/MATIC)
+  nativeBalanceWei: string; // raw
 }
 
 const STORAGE_KEY = 'hayq_wallet_connected';
 const TARGET_CHAIN_ID = WEB3_CONFIG.chainId;
+
+type NativeBalance = { wei: string; formatted: string };
 
 export const useWeb3 = () => {
   const [state, setState] = useState<Web3State>({
@@ -28,22 +31,31 @@ export const useWeb3 = () => {
     isConnecting: false,
     isWrongNetwork: false,
     nativeBalance: '0',
+    nativeBalanceWei: '0',
   });
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const initRef = useRef(false);
 
-  // Fetch native balance
-  const fetchNativeBalance = useCallback(async (provider: ethers.providers.Web3Provider, account: string) => {
-    try {
-      const balance = await provider.getBalance(account);
-      return ethers.utils.formatEther(balance);
-    } catch {
-      return '0';
-    }
+  const getInjectedProvider = useCallback(() => {
+    if (!window.ethereum) return null;
+    return new ethers.providers.Web3Provider(window.ethereum);
   }, []);
 
-  // Switch to the correct network
+  const fetchNativeBalance = useCallback(
+    async (provider: ethers.providers.Web3Provider, account: string): Promise<NativeBalance> => {
+      try {
+        const wei = await provider.getBalance(account);
+        return { wei: wei.toString(), formatted: ethers.utils.formatEther(wei) };
+      } catch (e) {
+        console.error('[web3] getBalance failed', e);
+        return { wei: '0', formatted: '0' };
+      }
+    },
+    []
+  );
+
   const switchNetwork = useCallback(async () => {
     if (!window.ethereum) return false;
 
@@ -54,8 +66,8 @@ export const useWeb3 = () => {
       });
       return true;
     } catch (switchError: any) {
-      // Chain not added to MetaMask - try to add it
-      if (switchError.code === 4902) {
+      // Chain not added to MetaMask
+      if (switchError?.code === 4902) {
         try {
           await window.ethereum.request({
             method: 'wallet_addEthereumChain',
@@ -63,7 +75,7 @@ export const useWeb3 = () => {
           });
           return true;
         } catch (addError) {
-          console.error('Failed to add network:', addError);
+          console.error('[web3] Failed to add network:', addError);
           toast({
             title: 'Network Error',
             description: `Please add ${WEB3_CONFIG.networkName} to MetaMask manually`,
@@ -72,44 +84,53 @@ export const useWeb3 = () => {
           return false;
         }
       }
-      console.error('Failed to switch network:', switchError);
+
+      console.error('[web3] Failed to switch network:', switchError);
       return false;
     }
   }, [toast]);
 
-  // Initialize provider and check for existing connection
-  const initializeProvider = useCallback(async () => {
+  const hydrateFromExistingSession = useCallback(async () => {
     if (!window.ethereum || initRef.current) return;
     initRef.current = true;
 
-    const provider = new ethers.providers.Web3Provider(window.ethereum);
-    const wasConnected = localStorage.getItem(STORAGE_KEY) === 'true';
-    
-    if (wasConnected) {
-      try {
-        const accounts = await provider.listAccounts();
-        if (accounts.length > 0) {
-          const signer = provider.getSigner();
-          const network = await provider.getNetwork();
-          const isWrongNetwork = network.chainId !== TARGET_CHAIN_ID;
-          const nativeBalance = await fetchNativeBalance(provider, accounts[0]);
+    const provider = getInjectedProvider();
+    if (!provider) return;
 
-          setState({
-            provider,
-            signer,
-            account: accounts[0],
-            chainId: network.chainId,
-            isConnected: true,
-            isConnecting: false,
-            isWrongNetwork,
-            nativeBalance,
-          });
-        }
-      } catch {
-        localStorage.removeItem(STORAGE_KEY);
-      }
+    const wasConnected = localStorage.getItem(STORAGE_KEY) === 'true';
+    if (!wasConnected) return;
+
+    try {
+      const accounts = await provider.listAccounts();
+      if (accounts.length === 0) return;
+
+      const signer = provider.getSigner();
+      const network = await provider.getNetwork();
+      const isWrongNetwork = network.chainId !== TARGET_CHAIN_ID;
+      const nb = await fetchNativeBalance(provider, accounts[0]);
+
+      console.info('[web3] hydrated', {
+        connectedChainId: network.chainId,
+        expectedChainId: TARGET_CHAIN_ID,
+        account: accounts[0],
+      });
+
+      setState({
+        provider,
+        signer,
+        account: accounts[0],
+        chainId: network.chainId,
+        isConnected: true,
+        isConnecting: false,
+        isWrongNetwork,
+        nativeBalance: nb.formatted,
+        nativeBalanceWei: nb.wei,
+      });
+    } catch (e) {
+      console.error('[web3] hydrate failed', e);
+      localStorage.removeItem(STORAGE_KEY);
     }
-  }, [fetchNativeBalance]);
+  }, [fetchNativeBalance, getInjectedProvider]);
 
   const connectWallet = useCallback(async () => {
     if (!window.ethereum) {
@@ -121,25 +142,41 @@ export const useWeb3 = () => {
       return;
     }
 
-    setState(prev => ({ ...prev, isConnecting: true }));
+    setState((prev) => ({ ...prev, isConnecting: true }));
 
     try {
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const accounts = await provider.send('eth_requestAccounts', []);
-      const network = await provider.getNetwork();
+      const provider = getInjectedProvider();
+      if (!provider) throw new Error('MetaMask provider not available');
 
-      // Force switch to correct network
-      if (network.chainId !== TARGET_CHAIN_ID) {
+      const accounts = (await provider.send('eth_requestAccounts', [])) as string[];
+      const account = accounts[0];
+      const networkBefore = await provider.getNetwork();
+
+      console.info('[web3] connect', {
+        connectedChainId: networkBefore.chainId,
+        expectedChainId: TARGET_CHAIN_ID,
+        account,
+      });
+
+      // Force network switch
+      if (networkBefore.chainId !== TARGET_CHAIN_ID) {
         const switched = await switchNetwork();
+
         if (!switched) {
-          setState(prev => ({ 
-            ...prev, 
+          // Keep connection but mark wrong network
+          const nb = await fetchNativeBalance(provider, account);
+          const signer = provider.getSigner();
+          setState((prev) => ({
+            ...prev,
+            provider,
+            signer,
+            account,
+            chainId: networkBefore.chainId,
+            isConnected: true,
             isConnecting: false,
             isWrongNetwork: true,
-            account: accounts[0],
-            chainId: network.chainId,
-            provider,
-            isConnected: true,
+            nativeBalance: nb.formatted,
+            nativeBalanceWei: nb.wei,
           }));
           toast({
             title: 'Wrong Network',
@@ -148,36 +185,48 @@ export const useWeb3 = () => {
           });
           return;
         }
-        // Re-initialize after network switch
-        await new Promise(resolve => setTimeout(resolve, 500));
-        const newProvider = new ethers.providers.Web3Provider(window.ethereum);
-        const newNetwork = await newProvider.getNetwork();
+
+        // Re-create provider after switch to avoid stale network state
+        await new Promise((resolve) => setTimeout(resolve, 400));
+        const newProvider = getInjectedProvider();
+        if (!newProvider) throw new Error('MetaMask provider not available after network switch');
+
+        const networkAfter = await newProvider.getNetwork();
         const signer = newProvider.getSigner();
-        const nativeBalance = await fetchNativeBalance(newProvider, accounts[0]);
+        const nb = await fetchNativeBalance(newProvider, account);
+
+        console.info('[web3] switched', {
+          connectedChainId: networkAfter.chainId,
+          expectedChainId: TARGET_CHAIN_ID,
+          account,
+          nativeBalanceWei: nb.wei,
+        });
 
         setState({
           provider: newProvider,
           signer,
-          account: accounts[0],
-          chainId: newNetwork.chainId,
+          account,
+          chainId: networkAfter.chainId,
           isConnected: true,
           isConnecting: false,
-          isWrongNetwork: false,
-          nativeBalance,
+          isWrongNetwork: networkAfter.chainId !== TARGET_CHAIN_ID,
+          nativeBalance: nb.formatted,
+          nativeBalanceWei: nb.wei,
         });
       } else {
         const signer = provider.getSigner();
-        const nativeBalance = await fetchNativeBalance(provider, accounts[0]);
+        const nb = await fetchNativeBalance(provider, account);
 
         setState({
           provider,
           signer,
-          account: accounts[0],
-          chainId: network.chainId,
+          account,
+          chainId: networkBefore.chainId,
           isConnected: true,
           isConnecting: false,
           isWrongNetwork: false,
-          nativeBalance,
+          nativeBalance: nb.formatted,
+          nativeBalanceWei: nb.wei,
         });
       }
 
@@ -186,17 +235,18 @@ export const useWeb3 = () => {
 
       toast({
         title: 'Wallet Connected',
-        description: `Connected to ${accounts[0].slice(0, 6)}...${accounts[0].slice(-4)}`,
+        description: `Connected to ${account.slice(0, 6)}...${account.slice(-4)}`,
       });
     } catch (error: any) {
-      setState(prev => ({ ...prev, isConnecting: false }));
+      console.error('[web3] connect failed', error);
+      setState((prev) => ({ ...prev, isConnecting: false }));
       toast({
         title: 'Connection Failed',
-        description: error.message || 'Failed to connect wallet',
+        description: error?.message || 'Failed to connect wallet',
         variant: 'destructive',
       });
     }
-  }, [toast, queryClient, switchNetwork, fetchNativeBalance]);
+  }, [fetchNativeBalance, getInjectedProvider, queryClient, switchNetwork, toast]);
 
   const disconnectWallet = useCallback(() => {
     setState({
@@ -208,6 +258,7 @@ export const useWeb3 = () => {
       isConnecting: false,
       isWrongNetwork: false,
       nativeBalance: '0',
+      nativeBalanceWei: '0',
     });
 
     localStorage.removeItem(STORAGE_KEY);
@@ -217,56 +268,76 @@ export const useWeb3 = () => {
       title: 'Wallet Disconnected',
       description: 'Your wallet has been disconnected',
     });
-  }, [toast, queryClient]);
+  }, [queryClient, toast]);
 
-  // Refresh native balance
   const refreshNativeBalance = useCallback(async () => {
-    if (state.provider && state.account) {
-      const balance = await fetchNativeBalance(state.provider, state.account);
-      setState(prev => ({ ...prev, nativeBalance: balance }));
-    }
-  }, [state.provider, state.account, fetchNativeBalance]);
+    if (!state.provider || !state.account) return;
+    const nb = await fetchNativeBalance(state.provider, state.account);
+    setState((prev) => ({ ...prev, nativeBalance: nb.formatted, nativeBalanceWei: nb.wei }));
+  }, [fetchNativeBalance, state.account, state.provider]);
 
-  // Handle account and chain changes
   useEffect(() => {
-    initializeProvider();
+    hydrateFromExistingSession();
 
     if (!window.ethereum) return;
 
     const handleAccountsChanged = async (accounts: string[]) => {
       if (accounts.length === 0) {
         disconnectWallet();
-      } else if (accounts[0] !== state.account) {
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const nativeBalance = await fetchNativeBalance(provider, accounts[0]);
-        setState(prev => ({ 
-          ...prev, 
-          account: accounts[0],
-          nativeBalance,
-        }));
-        queryClient.invalidateQueries({ queryKey: ['web3'] });
+        return;
       }
+
+      const account = accounts[0];
+      const provider = getInjectedProvider();
+      if (!provider) return;
+
+      const signer = provider.getSigner();
+      const nb = await fetchNativeBalance(provider, account);
+
+      console.info('[web3] accountsChanged', { account, nativeBalanceWei: nb.wei });
+
+      setState((prev) => ({
+        ...prev,
+        provider,
+        signer,
+        account,
+        nativeBalance: nb.formatted,
+        nativeBalanceWei: nb.wei,
+      }));
+
+      queryClient.invalidateQueries({ queryKey: ['web3'] });
     };
 
     const handleChainChanged = async (chainIdHex: string) => {
       const newChainId = parseInt(chainIdHex, 16);
       const isWrongNetwork = newChainId !== TARGET_CHAIN_ID;
-      
-      if (state.provider && state.account) {
-        const nativeBalance = await fetchNativeBalance(state.provider, state.account);
-        setState(prev => ({ 
-          ...prev, 
-          chainId: newChainId,
-          isWrongNetwork,
-          nativeBalance,
-        }));
-      } else {
-        setState(prev => ({ 
-          ...prev, 
-          chainId: newChainId,
-          isWrongNetwork,
-        }));
+
+      const provider = getInjectedProvider();
+      if (!provider) {
+        setState((prev) => ({ ...prev, chainId: newChainId, isWrongNetwork }));
+        queryClient.invalidateQueries({ queryKey: ['web3'] });
+        return;
       }
+
+      const signer = provider.getSigner();
+      const nb = state.account ? await fetchNativeBalance(provider, state.account) : { wei: '0', formatted: '0' };
+
+      console.info('[web3] chainChanged', {
+        connectedChainId: newChainId,
+        expectedChainId: TARGET_CHAIN_ID,
+        account: state.account,
+      });
+
+      setState((prev) => ({
+        ...prev,
+        provider,
+        signer,
+        chainId: newChainId,
+        isWrongNetwork,
+        nativeBalance: nb.formatted,
+        nativeBalanceWei: nb.wei,
+      }));
+
       queryClient.invalidateQueries({ queryKey: ['web3'] });
     };
 
@@ -277,20 +348,26 @@ export const useWeb3 = () => {
       window.ethereum?.removeListener('accountsChanged', handleAccountsChanged);
       window.ethereum?.removeListener('chainChanged', handleChainChanged);
     };
-  }, [initializeProvider, disconnectWallet, state.account, state.provider, queryClient, fetchNativeBalance]);
+  }, [
+    disconnectWallet,
+    fetchNativeBalance,
+    getInjectedProvider,
+    hydrateFromExistingSession,
+    queryClient,
+    state.account,
+  ]);
 
-  // Refresh balance periodically
   useEffect(() => {
     if (state.isConnected && !state.isWrongNetwork) {
       refreshNativeBalance();
       const interval = setInterval(refreshNativeBalance, 15000);
       return () => clearInterval(interval);
     }
-  }, [state.isConnected, state.isWrongNetwork, refreshNativeBalance]);
+  }, [refreshNativeBalance, state.isConnected, state.isWrongNetwork]);
 
-  return { 
-    ...state, 
-    connectWallet, 
+  return {
+    ...state,
+    connectWallet,
     disconnectWallet,
     switchNetwork,
     refreshNativeBalance,

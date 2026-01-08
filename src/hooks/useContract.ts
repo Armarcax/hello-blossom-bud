@@ -2,58 +2,11 @@ import { useMemo, useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import { WEB3_CONFIG } from '@/config/web3';
 import { useWeb3Context } from '@/contexts/Web3Context';
+import HAYQArtifact from '@/contracts/abis/HAYQ.json';
 
-// ERC20 + HAYQ Extended ABI
-const HAYQ_ABI = [
-  // ERC20 Standard
-  'function name() view returns (string)',
-  'function symbol() view returns (string)',
-  'function decimals() view returns (uint8)',
-  'function totalSupply() view returns (uint256)',
-  'function balanceOf(address) view returns (uint256)',
-  'function transfer(address to, uint256 amount) returns (bool)',
-  'function allowance(address owner, address spender) view returns (uint256)',
-  'function approve(address spender, uint256 amount) returns (bool)',
-  'function transferFrom(address from, address to, uint256 amount) returns (bool)',
-  
-  // Staking
-  'function stake(uint256 amount)',
-  'function unstake(uint256 amount)',
-  'function staked(address account) view returns (uint256)',
-  'function stakedBalanceOf(address user) view returns (uint256)',
-  
-  // Snapshot
-  'function snapshot()',
-  
-  // Buyback
-  'function buyback(uint256 tokenAmount, uint256 minOut)',
-  
-  // Vesting
-  'function setVestingVault(address _vault)',
-  'function setVestingVaultReadable(address _vault)',
-  'function createTeamVesting(address beneficiary, uint256 amount, uint64 start, uint64 duration)',
-  'function vestingTotal(address user) view returns (uint256)',
-  'function vestingReleased(address user) view returns (uint256)',
-  
-  // Router & MiniMVP
-  'function router() view returns (address)',
-  'function miniMVP() view returns (address)',
-  'function setRouter(address _router)',
-  'function setMiniMVP(address _mini)',
-  'function vestingVault() view returns (address)',
-  'function allowanceToRouter(address user) view returns (uint256)',
-  
-  // Mint
-  'function mint(address to, uint256 amount)',
-  
-  // Events
-  'event Transfer(address indexed from, address indexed to, uint256 value)',
-  'event Approval(address indexed owner, address indexed spender, uint256 value)',
-  'event Staked(address indexed user, uint256 amount)',
-  'event Unstaked(address indexed user, uint256 amount)',
-  'event Buyback(uint256 tokens, uint256 minOut)',
-  'event TeamVestingCreated(address indexed beneficiary, uint256 amount, uint64 start, uint64 duration)',
-];
+type AbiLike = any;
+
+const ABI: AbiLike = (HAYQArtifact as any)?.abi ?? HAYQArtifact;
 
 interface TokenInfo {
   name: string;
@@ -63,65 +16,105 @@ interface TokenInfo {
 
 export const useContract = () => {
   const { provider, signer, chainId, isConnected, isWrongNetwork, targetChainId } = useWeb3Context();
+
   const [tokenInfo, setTokenInfo] = useState<TokenInfo>({ name: '', symbol: 'HAYQ', decimals: 18 });
   const [contractError, setContractError] = useState<string | null>(null);
+  const [contractCode, setContractCode] = useState<string | null>(null);
 
   const contractAddress = WEB3_CONFIG.contractAddress;
 
-  const contract = useMemo(() => {
-    if (!provider || !contractAddress || isWrongNetwork) return null;
-
-    try {
-      return new ethers.Contract(
-        contractAddress,
-        HAYQ_ABI,
-        signer || provider
-      );
-    } catch (error) {
-      console.error('Contract initialization error:', error);
-      setContractError('Failed to initialize contract');
-      return null;
-    }
-  }, [provider, signer, contractAddress, isWrongNetwork]);
-
   const readContract = useMemo(() => {
-    if (!provider || !contractAddress || isWrongNetwork) return null;
-
+    if (!provider || !contractAddress || isWrongNetwork || !!contractError) return null;
     try {
-      return new ethers.Contract(contractAddress, HAYQ_ABI, provider);
+      return new ethers.Contract(contractAddress, ABI, provider);
     } catch (error) {
-      console.error('Read contract initialization error:', error);
+      console.error('[contract] read contract init error:', error);
       return null;
     }
-  }, [provider, contractAddress, isWrongNetwork]);
+  }, [provider, contractAddress, isWrongNetwork, contractError]);
 
-  // Fetch token info (name, symbol, decimals) dynamically
+  const contract = useMemo(() => {
+    if (!provider || !contractAddress || isWrongNetwork || !!contractError) return null;
+    try {
+      return new ethers.Contract(contractAddress, ABI, signer ?? provider);
+    } catch (error) {
+      console.error('[contract] contract init error:', error);
+      return null;
+    }
+  }, [provider, signer, contractAddress, isWrongNetwork, contractError]);
+
   useEffect(() => {
-    const fetchTokenInfo = async () => {
-      if (!readContract) return;
+    const run = async () => {
+      setContractCode(null);
+
+      if (!isConnected) {
+        setContractError(null);
+        return;
+      }
+
+      if (isWrongNetwork) {
+        setContractError(null);
+        return;
+      }
+
+      if (!provider) {
+        setContractError('Provider not initialized');
+        return;
+      }
+
+      if (!contractAddress) {
+        setContractError('Contract address is not configured (VITE_CONTRACT_ADDRESS)');
+        return;
+      }
 
       try {
-        const [name, symbol, decimals] = await Promise.all([
-          readContract.name().catch(() => 'HAYQ Token'),
-          readContract.symbol().catch(() => 'HAYQ'),
-          readContract.decimals().catch(() => 18),
-        ]);
-        setTokenInfo({ name, symbol, decimals });
+        const code = await provider.getCode(contractAddress);
+        setContractCode(code);
+
+        if (!code || code === '0x') {
+          setContractError(
+            `No contract deployed at ${contractAddress} on chainId ${chainId ?? 'unknown'} (expected ${targetChainId})`
+          );
+          return;
+        }
+      } catch (e) {
+        console.error('[contract] getCode failed', e);
+        setContractError('Failed to verify contract deployment (getCode)');
+        return;
+      }
+
+      // Fetch ERC20 metadata. If any of these fail, surface it explicitly.
+      try {
+        const name = await provider
+          .call({ to: contractAddress, data: new ethers.utils.Interface(ABI).encodeFunctionData('name', []) })
+          .then(() => (readContract ? readContract.name() : ''))
+          .catch(() => '');
+
+        const symbol = await (readContract ? readContract.symbol().catch(() => '') : Promise.resolve(''));
+        const decimals = await (readContract ? readContract.decimals() : Promise.reject(new Error('No read contract')));
+
+        setTokenInfo({
+          name: name || 'Token',
+          symbol: symbol || 'TOKEN',
+          decimals: typeof decimals === 'number' ? decimals : Number(decimals),
+        });
+
         setContractError(null);
-      } catch (error) {
-        console.error('Failed to fetch token info:', error);
-        setContractError('Contract not found on this network');
+      } catch (e) {
+        console.error('[contract] token info fetch failed', e);
+        setContractError('Unable to read token metadata (name/symbol/decimals). Contract/ABI/network mismatch.');
       }
     };
 
-    fetchTokenInfo();
-  }, [readContract]);
+    run();
+  }, [chainId, contractAddress, isConnected, isWrongNetwork, provider, readContract, targetChainId]);
 
   return {
     contract,
     readContract,
     isReady: isConnected && !isWrongNetwork && !!contract && !contractError,
     contractAddress,
+    contractCode,
     tokenInfo,
     contractError,
     targetChainId,
