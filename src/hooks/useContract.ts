@@ -1,9 +1,9 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { ethers } from 'ethers';
-import { getContractAddress } from '@/config/contracts';
-import { useWeb3 } from './useWeb3';
+import { WEB3_CONFIG } from '@/config/web3';
+import { useWeb3Context } from '@/contexts/Web3Context';
 
-// ABI for HAYQ Token (HAYQMiniMVP Contract)
+// ERC20 + HAYQ Extended ABI
 const HAYQ_ABI = [
   // ERC20 Standard
   'function name() view returns (string)',
@@ -55,40 +55,75 @@ const HAYQ_ABI = [
   'event TeamVestingCreated(address indexed beneficiary, uint256 amount, uint64 start, uint64 duration)',
 ];
 
+interface TokenInfo {
+  name: string;
+  symbol: string;
+  decimals: number;
+}
+
 export const useContract = () => {
-  const { provider, signer, chainId, isConnected } = useWeb3();
+  const { provider, signer, chainId, isConnected, isWrongNetwork, targetChainId } = useWeb3Context();
+  const [tokenInfo, setTokenInfo] = useState<TokenInfo>({ name: '', symbol: 'HAYQ', decimals: 18 });
+  const [contractError, setContractError] = useState<string | null>(null);
+
+  const contractAddress = WEB3_CONFIG.contractAddress;
 
   const contract = useMemo(() => {
-    if (!provider || !chainId) return null;
+    if (!provider || !contractAddress || isWrongNetwork) return null;
 
     try {
-      const address = getContractAddress(chainId);
       return new ethers.Contract(
-        address,
+        contractAddress,
         HAYQ_ABI,
         signer || provider
       );
     } catch (error) {
       console.error('Contract initialization error:', error);
+      setContractError('Failed to initialize contract');
       return null;
     }
-  }, [provider, signer, chainId]);
+  }, [provider, signer, contractAddress, isWrongNetwork]);
 
   const readContract = useMemo(() => {
-    if (!provider || !chainId) return null;
+    if (!provider || !contractAddress || isWrongNetwork) return null;
 
     try {
-      const address = getContractAddress(chainId);
-      return new ethers.Contract(address, HAYQ_ABI, provider);
+      return new ethers.Contract(contractAddress, HAYQ_ABI, provider);
     } catch (error) {
       console.error('Read contract initialization error:', error);
       return null;
     }
-  }, [provider, chainId]);
+  }, [provider, contractAddress, isWrongNetwork]);
+
+  // Fetch token info (name, symbol, decimals) dynamically
+  useEffect(() => {
+    const fetchTokenInfo = async () => {
+      if (!readContract) return;
+
+      try {
+        const [name, symbol, decimals] = await Promise.all([
+          readContract.name().catch(() => 'HAYQ Token'),
+          readContract.symbol().catch(() => 'HAYQ'),
+          readContract.decimals().catch(() => 18),
+        ]);
+        setTokenInfo({ name, symbol, decimals });
+        setContractError(null);
+      } catch (error) {
+        console.error('Failed to fetch token info:', error);
+        setContractError('Contract not found on this network');
+      }
+    };
+
+    fetchTokenInfo();
+  }, [readContract]);
 
   return {
     contract,
     readContract,
-    isReady: isConnected && !!contract,
+    isReady: isConnected && !isWrongNetwork && !!contract && !contractError,
+    contractAddress,
+    tokenInfo,
+    contractError,
+    targetChainId,
   };
 };
