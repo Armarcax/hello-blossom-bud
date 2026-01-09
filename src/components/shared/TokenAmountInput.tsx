@@ -1,5 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { formatDisplayNumber } from "@/utils/contractHelpers";
 
 interface TokenAmountInputProps {
   value: string;
@@ -20,7 +21,7 @@ const TokenAmountInput = ({
   tokenSymbol = "HAYQ",
   label = "Available",
 }: TokenAmountInputProps) => {
-  const formattedMax = parseFloat(maxValue).toFixed(2);
+  const formattedMax = formatDisplayNumber(maxValue, 4);
 
   return (
     <div className="space-y-2">

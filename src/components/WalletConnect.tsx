@@ -3,14 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Wallet, LogOut, Wifi, AlertCircle } from "lucide-react";
 import { useWeb3Context } from "@/contexts/Web3Context";
-import { useContract } from "@/hooks/useContract";
 import { Badge } from "@/components/ui/badge";
 import { WEB3_CONFIG } from "@/config/web3";
+import { formatDisplayNumber } from "@/utils/contractHelpers";
 
 const WalletConnect = () => {
   const { t } = useTranslation();
   const { 
-    account, 
     isConnected, 
     isConnecting,
     isWrongNetwork,
@@ -21,7 +20,6 @@ const WalletConnect = () => {
     networkName,
     shortAddress,
   } = useWeb3Context();
-  const { tokenInfo } = useContract();
 
   return (
     <Card className="component">
@@ -59,7 +57,7 @@ const WalletConnect = () => {
                   {WEB3_CONFIG.nativeCurrency.symbol} Balance
                 </div>
                 <div className="text-lg font-semibold">
-                  {parseFloat(nativeBalance).toFixed(4)} {WEB3_CONFIG.nativeCurrency.symbol}
+                  {formatDisplayNumber(nativeBalance, 4)} {WEB3_CONFIG.nativeCurrency.symbol}
                 </div>
               </div>
             )}

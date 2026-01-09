@@ -27,8 +27,7 @@ export const useContract = () => {
     if (!provider || !contractAddress || isWrongNetwork || !!contractError) return null;
     try {
       return new ethers.Contract(contractAddress, ABI, provider);
-    } catch (error) {
-      console.error('[contract] read contract init error:', error);
+    } catch {
       return null;
     }
   }, [provider, contractAddress, isWrongNetwork, contractError]);
@@ -37,8 +36,7 @@ export const useContract = () => {
     if (!provider || !contractAddress || isWrongNetwork || !!contractError) return null;
     try {
       return new ethers.Contract(contractAddress, ABI, signer ?? provider);
-    } catch (error) {
-      console.error('[contract] contract init error:', error);
+    } catch {
       return null;
     }
   }, [provider, signer, contractAddress, isWrongNetwork, contractError]);
@@ -77,9 +75,8 @@ export const useContract = () => {
           );
           return;
         }
-      } catch (e) {
-        console.error('[contract] getCode failed', e);
-        setContractError('Failed to verify contract deployment (getCode)');
+      } catch {
+        setContractError('Failed to verify contract deployment');
         return;
       }
 
@@ -100,9 +97,8 @@ export const useContract = () => {
         });
 
         setContractError(null);
-      } catch (e) {
-        console.error('[contract] token info fetch failed', e);
-        setContractError('Unable to read token metadata (name/symbol/decimals). Contract/ABI/network mismatch.');
+      } catch {
+        setContractError('Unable to read token metadata. Contract/ABI mismatch.');
       }
     };
 
