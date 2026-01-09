@@ -8,11 +8,13 @@ import Balance from "@/components/Balance";
 import Transfer from "@/components/Transfer";
 import Stake from "@/components/Stake";
 import Unstake from "@/components/Unstake";
-import Buyback from "@/components/Buyback";
-import Voting from "@/components/Voting";
-import LiveChart from "@/components/LiveChart";
-import DividendClaim from "@/components/DividendClaim";
-import EconomicGrowth from "@/components/EconomicGrowth";
+
+// Phase 2 features - temporarily hidden for MVP
+// import Buyback from "@/components/Buyback";
+// import Voting from "@/components/Voting";
+// import LiveChart from "@/components/LiveChart";
+// import DividendClaim from "@/components/DividendClaim";
+// import EconomicGrowth from "@/components/EconomicGrowth";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -37,11 +39,12 @@ const Index = () => {
           <Transfer />
           <Stake />
           <Unstake />
-          <Buyback />
-          <Voting />
-          <LiveChart />
-          <DividendClaim />
-          <EconomicGrowth />
+          {/* Phase 2 features - temporarily hidden for MVP */}
+          {/* <Buyback /> */}
+          {/* <Voting /> */}
+          {/* <LiveChart /> */}
+          {/* <DividendClaim /> */}
+          {/* <EconomicGrowth /> */}
         </div>
       </DashboardLayout>
     </NetworkGuard>
