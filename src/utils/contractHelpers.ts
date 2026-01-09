@@ -1,4 +1,5 @@
 import { ethers } from 'ethers';
+import { WEB3_CONFIG } from '@/config/web3';
 
 export const formatTokenAmount = (amount: ethers.BigNumber | string, decimals = 18): string => {
   try {
@@ -7,6 +8,31 @@ export const formatTokenAmount = (amount: ethers.BigNumber | string, decimals = 
     console.error('Error formatting token amount:', error);
     return '0';
   }
+};
+
+/**
+ * Format a number for human-readable display with thousand separators
+ * Prevents scientific notation (e.g. 4e+21)
+ */
+export const formatDisplayNumber = (value: string | number, maxDecimals = 4): string => {
+  const num = typeof value === 'string' ? parseFloat(value) : value;
+  
+  if (!isFinite(num) || isNaN(num)) return '0';
+  
+  // Handle very small numbers
+  if (Math.abs(num) < 0.0001 && num !== 0) {
+    return num.toFixed(8).replace(/\.?0+$/, '');
+  }
+  
+  // Format with thousand separators, avoiding scientific notation
+  const fixed = num.toFixed(maxDecimals);
+  const [intPart, decPart] = fixed.split('.');
+  const formattedInt = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  
+  // Remove trailing zeros from decimal part
+  const cleanDec = decPart?.replace(/0+$/, '');
+  
+  return cleanDec ? `${formattedInt}.${cleanDec}` : formattedInt;
 };
 
 export const parseTokenAmount = (amount: string, decimals = 18): ethers.BigNumber => {
@@ -22,15 +48,10 @@ export const shortenAddress = (address: string, chars = 4): string => {
   return `${address.substring(0, chars + 2)}...${address.substring(42 - chars)}`;
 };
 
-export const getExplorerUrl = (chainId: number, address: string, type: 'address' | 'tx' = 'address'): string => {
-  const explorers: Record<number, string> = {
-    1: 'https://etherscan.io',
-    11155111: 'https://sepolia.etherscan.io',
-    31337: 'http://localhost:8545', // Hardhat local
-  };
-
-  const baseUrl = explorers[chainId] || explorers[1];
-  return `${baseUrl}/${type}/${address}`;
+export const getExplorerUrl = (chainId: number, txOrAddress: string, type: 'address' | 'tx' = 'address'): string => {
+  // Use env-configured block explorer, fallback to Etherscan
+  const baseUrl = WEB3_CONFIG.blockExplorer || 'https://etherscan.io';
+  return `${baseUrl}/${type}/${txOrAddress}`;
 };
 
 export const waitForTransaction = async (
