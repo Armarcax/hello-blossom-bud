@@ -10,9 +10,9 @@ interface NetworkGuardProps {
 
 const NetworkGuard = ({ children }: NetworkGuardProps) => {
   const { isConnected, isWrongNetwork, switchNetwork, networkName } = useWeb3Context();
-  const { contractError, isReady } = useContract();
+  const { contractError } = useContract();
 
-  // Not connected - show connect prompt (handled by individual components)
+  // Not connected - allow individual components to show connect prompts
   if (!isConnected) {
     return <>{children}</>;
   }
@@ -36,15 +36,15 @@ const NetworkGuard = ({ children }: NetworkGuardProps) => {
             Switch to {networkName}
           </Button>
           <p className="text-xs text-muted-foreground">
-            Chain ID: {WEB3_CONFIG.chainId}
+            Expected Chain ID: {WEB3_CONFIG.chainId}
           </p>
         </div>
       </div>
     );
   }
 
-  // Contract error - show error state
-  if (contractError && !WEB3_CONFIG.contractAddress) {
+  // Contract not configured - block UI
+  if (!WEB3_CONFIG.contractAddress) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <div className="max-w-md w-full text-center space-y-6">
@@ -56,6 +56,33 @@ const NetworkGuard = ({ children }: NetworkGuardProps) => {
             <p className="text-muted-foreground">
               Contract address is not configured. Please set <code className="bg-muted px-1 py-0.5 rounded text-sm">VITE_CONTRACT_ADDRESS</code> in your environment.
             </p>
+          </div>
+          <Button onClick={() => window.location.reload()} variant="outline">
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Reload Page
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Contract error (not deployed on this chain, ABI mismatch, etc.) - block UI
+  if (contractError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <div className="max-w-md w-full text-center space-y-6">
+          <div className="mx-auto w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center">
+            <AlertTriangle className="h-8 w-8 text-destructive" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold">Contract Unavailable</h2>
+            <p className="text-muted-foreground">
+              {contractError}
+            </p>
+          </div>
+          <div className="text-xs text-muted-foreground space-y-1">
+            <p>Network: {networkName}</p>
+            <p>Contract: {WEB3_CONFIG.contractAddress.slice(0, 10)}...{WEB3_CONFIG.contractAddress.slice(-8)}</p>
           </div>
           <Button onClick={() => window.location.reload()} variant="outline">
             <RefreshCw className="mr-2 h-4 w-4" />

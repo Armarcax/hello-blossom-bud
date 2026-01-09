@@ -71,8 +71,7 @@ export const useBalanceQuery = () => {
           rawRewards: rewards.toString(),
           decimalsUsed: decimals,
         };
-      } catch (error) {
-        console.error('[web3] Failed to fetch balances:', error);
+      } catch {
         return {
           balance: '0',
           stakedBalance: '0',
@@ -184,8 +183,7 @@ export const useTokenMetrics = () => {
           stakingRatio: Math.round(stakingRatio * 10) / 10,
           timestamp: Date.now(),
         };
-      } catch (error) {
-        console.error('[web3] Failed to fetch token metrics:', error);
+      } catch {
         return { totalSupply: '0', stakingRatio: 0, timestamp: Date.now() };
       }
     },

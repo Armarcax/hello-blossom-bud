@@ -4,8 +4,7 @@ import { WEB3_CONFIG } from '@/config/web3';
 export const formatTokenAmount = (amount: ethers.BigNumber | string, decimals = 18): string => {
   try {
     return ethers.utils.formatUnits(amount, decimals);
-  } catch (error) {
-    console.error('Error formatting token amount:', error);
+  } catch {
     return '0';
   }
 };
@@ -38,8 +37,7 @@ export const formatDisplayNumber = (value: string | number, maxDecimals = 4): st
 export const parseTokenAmount = (amount: string, decimals = 18): ethers.BigNumber => {
   try {
     return ethers.utils.parseUnits(amount, decimals);
-  } catch (error) {
-    console.error('Error parsing token amount:', error);
+  } catch {
     return ethers.BigNumber.from(0);
   }
 };

@@ -48,8 +48,7 @@ export const useWeb3 = () => {
       try {
         const wei = await provider.getBalance(account);
         return { wei: wei.toString(), formatted: ethers.utils.formatEther(wei) };
-      } catch (e) {
-        console.error('[web3] getBalance failed', e);
+      } catch {
         return { wei: '0', formatted: '0' };
       }
     },
@@ -74,8 +73,7 @@ export const useWeb3 = () => {
             params: [getNetworkConfig()],
           });
           return true;
-        } catch (addError) {
-          console.error('[web3] Failed to add network:', addError);
+        } catch {
           toast({
             title: 'Network Error',
             description: `Please add ${WEB3_CONFIG.networkName} to MetaMask manually`,
@@ -85,7 +83,6 @@ export const useWeb3 = () => {
         }
       }
 
-      console.error('[web3] Failed to switch network:', switchError);
       return false;
     }
   }, [toast]);
@@ -109,12 +106,6 @@ export const useWeb3 = () => {
       const isWrongNetwork = network.chainId !== TARGET_CHAIN_ID;
       const nb = await fetchNativeBalance(provider, accounts[0]);
 
-      console.info('[web3] hydrated', {
-        connectedChainId: network.chainId,
-        expectedChainId: TARGET_CHAIN_ID,
-        account: accounts[0],
-      });
-
       setState({
         provider,
         signer,
@@ -126,8 +117,7 @@ export const useWeb3 = () => {
         nativeBalance: nb.formatted,
         nativeBalanceWei: nb.wei,
       });
-    } catch (e) {
-      console.error('[web3] hydrate failed', e);
+    } catch {
       localStorage.removeItem(STORAGE_KEY);
     }
   }, [fetchNativeBalance, getInjectedProvider]);
@@ -151,12 +141,6 @@ export const useWeb3 = () => {
       const accounts = (await provider.send('eth_requestAccounts', [])) as string[];
       const account = accounts[0];
       const networkBefore = await provider.getNetwork();
-
-      console.info('[web3] connect', {
-        connectedChainId: networkBefore.chainId,
-        expectedChainId: TARGET_CHAIN_ID,
-        account,
-      });
 
       // Force network switch
       if (networkBefore.chainId !== TARGET_CHAIN_ID) {
@@ -195,13 +179,6 @@ export const useWeb3 = () => {
         const signer = newProvider.getSigner();
         const nb = await fetchNativeBalance(newProvider, account);
 
-        console.info('[web3] switched', {
-          connectedChainId: networkAfter.chainId,
-          expectedChainId: TARGET_CHAIN_ID,
-          account,
-          nativeBalanceWei: nb.wei,
-        });
-
         setState({
           provider: newProvider,
           signer,
@@ -238,7 +215,6 @@ export const useWeb3 = () => {
         description: `Connected to ${account.slice(0, 6)}...${account.slice(-4)}`,
       });
     } catch (error: any) {
-      console.error('[web3] connect failed', error);
       setState((prev) => ({ ...prev, isConnecting: false }));
       toast({
         title: 'Connection Failed',
@@ -294,8 +270,6 @@ export const useWeb3 = () => {
       const signer = provider.getSigner();
       const nb = await fetchNativeBalance(provider, account);
 
-      console.info('[web3] accountsChanged', { account, nativeBalanceWei: nb.wei });
-
       setState((prev) => ({
         ...prev,
         provider,
@@ -321,12 +295,6 @@ export const useWeb3 = () => {
 
       const signer = provider.getSigner();
       const nb = state.account ? await fetchNativeBalance(provider, state.account) : { wei: '0', formatted: '0' };
-
-      console.info('[web3] chainChanged', {
-        connectedChainId: newChainId,
-        expectedChainId: TARGET_CHAIN_ID,
-        account: state.account,
-      });
 
       setState((prev) => ({
         ...prev,

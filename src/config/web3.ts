@@ -28,13 +28,5 @@ export const getNetworkConfig = () => ({
 
 // Validate configuration
 export const isConfigValid = () => {
-  if (!WEB3_CONFIG.contractAddress) {
-    console.error('VITE_CONTRACT_ADDRESS is not set');
-    return false;
-  }
-  if (!WEB3_CONFIG.chainId) {
-    console.error('VITE_CHAIN_ID is not set');
-    return false;
-  }
-  return true;
+  return !!WEB3_CONFIG.contractAddress && !!WEB3_CONFIG.chainId;
 };
