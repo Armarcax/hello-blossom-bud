@@ -3,6 +3,7 @@ export { useWeb3 } from './useWeb3';
 export { useContract } from './useContract';
 export { useBalance } from './useBalance';
 export { useDividendTracker } from './useDividendTracker';
+export { useTokenomics, formatSupply, formatSupplyAbbreviated } from './useTokenomics';
 
 // React Query based hooks
 export { useBalanceQuery, useTokenMetrics, useInvalidateWeb3Queries, web3Keys } from './useWeb3Query';

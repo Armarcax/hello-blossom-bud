@@ -8,6 +8,7 @@ import Balance from "@/components/Balance";
 import Transfer from "@/components/Transfer";
 import Stake from "@/components/Stake";
 import Unstake from "@/components/Unstake";
+import Tokenomics from "@/components/Tokenomics";
 
 // Phase 2 features - temporarily hidden for MVP
 // import Buyback from "@/components/Buyback";
@@ -33,6 +34,12 @@ const Index = () => {
   return (
     <NetworkGuard>
       <DashboardLayout>
+        {/* Tokenomics Section - Full Width */}
+        <div className="mb-8">
+          <Tokenomics />
+        </div>
+
+        {/* Core Features Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           <WalletConnect />
           <Balance />
