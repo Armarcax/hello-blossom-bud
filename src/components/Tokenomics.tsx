@@ -1,4 +1,4 @@
-import { Coins, Lock, TrendingUp, ExternalLink, Shield, FileText, CheckCircle2 } from 'lucide-react';
+import { Coins, Lock, TrendingUp, ExternalLink, Shield, FileText, CheckCircle2, Download } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useTokenomics, formatSupply, formatSupplyAbbreviated } from '@/hooks/useTokenomics';
 import { WEB3_CONFIG } from '@/config/web3';
+import WhitepaperDownload from '@/components/WhitepaperDownload';
 
 /**
  * Supply Stat Card Component
@@ -330,6 +331,11 @@ const Tokenomics = () => {
 
         {/* Whitepaper Section */}
         <WhitepaperSection vestingVaultAddress={tokenomics.vestingVaultAddress} />
+
+        <Separator />
+
+        {/* Whitepaper Download */}
+        <WhitepaperDownload />
       </CardContent>
     </Card>
   );
