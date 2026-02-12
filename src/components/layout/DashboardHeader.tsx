@@ -2,9 +2,10 @@ import { useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { LogOut, Shield } from "lucide-react";
+import { LogOut, Shield, Download } from "lucide-react";
 import hayqLogo from "@/assets/HAYQ_LOGO.png";
 import LanguageSwitcher from "./LanguageSwitcher";
+import WhitepaperDownload from "@/components/WhitepaperDownload";
 
 const DashboardHeader = () => {
   const navigate = useNavigate();
@@ -46,7 +47,10 @@ const DashboardHeader = () => {
         />
       </div>
 
-      <LanguageSwitcher />
+      <div className="flex items-center justify-center gap-4 mt-4">
+        <LanguageSwitcher />
+        <WhitepaperDownload variant="compact" />
+      </div>
     </header>
   );
 };
