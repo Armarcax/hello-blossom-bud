@@ -23,6 +23,14 @@ export const formatDisplayNumber = (value: string | number, maxDecimals = 4): st
     return num.toFixed(8).replace(/\.?0+$/, '');
   }
   
+  // Handle very large numbers - use toFixed to avoid scientific notation
+  // JavaScript's toFixed can fail for extremely large numbers, so we handle manually
+  if (Math.abs(num) >= 1e15) {
+    // For extremely large numbers, use BigInt-style string conversion
+    const str = BigInt(Math.round(num)).toString();
+    return str.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  }
+  
   // Format with thousand separators, avoiding scientific notation
   const fixed = num.toFixed(maxDecimals);
   const [intPart, decPart] = fixed.split('.');

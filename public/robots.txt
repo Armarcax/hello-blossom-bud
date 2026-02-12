@@ -1,5 +1,5 @@
 # HAYQ Token - Production Robots.txt
-# https://hayq.io
+# https://hayq.live
 
 User-agent: Googlebot
 Allow: /
@@ -17,4 +17,4 @@ User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://hayq.io/sitemap.xml
+Sitemap: https://hayq.live/sitemap.xml

@@ -1,9 +1,15 @@
 import { Youtube, Facebook, Instagram, Music2, Twitter } from "lucide-react";
+import WhitepaperDownload from "@/components/WhitepaperDownload";
 
 const Footer = () => {
   return (
     <footer className="mt-16 border-t border-border pt-8 pb-4">
       <div className="max-w-7xl mx-auto px-4">
+        {/* Whitepaper Download */}
+        <div className="flex justify-center mb-8">
+          <WhitepaperDownload variant="compact" />
+        </div>
+
         {/* Social Media Links */}
         <div className="flex items-center justify-center gap-6 flex-wrap">
           <SocialLink href="https://youtube.com/@hayq" icon={Youtube} label="YouTube" />

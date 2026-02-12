@@ -12,7 +12,19 @@ import { formatDisplayNumber } from "@/utils/contractHelpers";
 // Human-readable formatting - prevents scientific notation like 4e+21
 const safeFormat = (value: string, decimals: number = 4) => {
   const n = Number(value);
-  if (!Number.isFinite(n)) return '0';
+  if (!Number.isFinite(n) || isNaN(n)) return '0';
+  
+  // For very large numbers, show abbreviated form (e.g., 4B, 100M)
+  if (Math.abs(n) >= 1_000_000_000) {
+    return `${formatDisplayNumber(n / 1_000_000_000, 2)}B`;
+  }
+  if (Math.abs(n) >= 1_000_000) {
+    return `${formatDisplayNumber(n / 1_000_000, 2)}M`;
+  }
+  if (Math.abs(n) >= 1_000) {
+    return `${formatDisplayNumber(n / 1_000, 2)}K`;
+  }
+  
   return formatDisplayNumber(n, decimals);
 };
 
