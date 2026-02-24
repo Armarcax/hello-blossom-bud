@@ -1,6 +1,15 @@
 {
   "name": "HAYQ",
   "symbol": "HAYQ",
-  "description": "HAYQ Token",
-  "image": "https://hayq.live/logo.png"
+  "description": "HAYQ Token - Armenian Community Token",
+  "image": "https://raw.githubusercontent.com/Armarcax/hello-blossom-bud/main/public/logo.png",
+  "properties": {
+    "files": [
+      {
+        "uri": "https://raw.githubusercontent.com/Armarcax/hello-blossom-bud/main/public/logo.png",
+        "type": "image/png"
+      }
+    ],
+    "category": "token"
+  }
 }
