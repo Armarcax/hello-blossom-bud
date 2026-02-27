@@ -1,25 +1,8 @@
 {
   "name": "HAYQ",
   "symbol": "HAYQ",
-  "description": "ՀԱՅՔ utility token on Solana Devnet",
+  "description": "Հայկական Utility Token",
   "image": "https://hayq.live/logo.png",
-  "external_url": "https://hayq.live",
   "seller_fee_basis_points": 0,
-  "attributes": [],
-  "collection": null,
-  "properties": {
-    "files": [
-      {
-        "uri": "https://hayq.live/logo.png",
-        "type": "image/png"
-      }
-    ],
-    "category": "image",
-    "creators": [
-      {
-        "address": "7K1LvUhG43aQYLNudHgEPZTrscDEqvWBPYpY9jyZMjzw",
-        "share": 100
-      }
-    ]
-  }
+  "external_url": "https://hayq.live"
 }
