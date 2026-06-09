@@ -1,0 +1,166 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    --background: 0 0% 98%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 222 100% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 280 100% 65%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 170 100% 45%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 222 100% 50%;
+    --radius: 0.5rem;
+    
+    /* Armenian Flag Colors - Light Mode */
+    --armenia-red: 0 75% 65%;
+    --armenia-blue: 210 70% 65%;
+    --armenia-orange: 30 85% 65%;
+    
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(222 100% 50%), hsl(280 100% 65%));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(210 40% 98%));
+    --gradient-glow: radial-gradient(circle at 50% 0%, hsl(var(--armenia-red) / 0.15), hsl(var(--armenia-blue) / 0.15), hsl(var(--armenia-orange) / 0.15));
+    --gradient-background: linear-gradient(135deg, hsl(var(--armenia-red) / 0.08) 0%, hsl(var(--armenia-blue) / 0.08) 50%, hsl(var(--armenia-orange) / 0.08) 100%);
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 hsl(222 47% 11% / 0.05);
+    --shadow-md: 0 4px 6px -1px hsl(222 47% 11% / 0.1);
+    --shadow-lg: 0 10px 15px -3px hsl(222 47% 11% / 0.1);
+    --shadow-glow: 0 0 20px hsl(222 100% 50% / 0.3);
+    
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary: 222 100% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 40% 96%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 214 32% 91%;
+    --sidebar-ring: 222 100% 50%;
+  }
+
+  .dark {
+    --background: 222 47% 6%;
+    --foreground: 210 40% 98%;
+    --card: 222 47% 10%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 10%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 222 100% 60%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 280 100% 70%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 170 100% 50%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 222 100% 60%;
+    
+    /* Armenian Flag Colors - Dark Mode */
+    --armenia-red: 0 70% 35%;
+    --armenia-blue: 210 65% 30%;
+    --armenia-orange: 30 75% 40%;
+    
+    /* Dark Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(222 100% 60%), hsl(280 100% 70%));
+    --gradient-card: linear-gradient(145deg, hsl(222 47% 10%), hsl(222 47% 12%));
+    --gradient-glow: radial-gradient(circle at 50% 0%, hsl(var(--armenia-red) / 0.25), hsl(var(--armenia-blue) / 0.25), hsl(var(--armenia-orange) / 0.25));
+    --gradient-background: linear-gradient(135deg, hsl(var(--armenia-red) / 0.15) 0%, hsl(var(--armenia-blue) / 0.15) 50%, hsl(var(--armenia-orange) / 0.15) 100%);
+    
+    /* Dark Shadows */
+    --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.3);
+    --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.5);
+    --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.6);
+    --shadow-glow: 0 0 30px hsl(222 100% 60% / 0.4);
+    
+    --sidebar-background: 222 47% 8%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 222 100% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 217 33% 17%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217 33% 17%;
+    --sidebar-ring: 222 100% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+.component {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.component:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.component::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 3px;
+  height: 100%;
+  background: var(--gradient-primary);
+  transition: width 0.3s ease;
+}
+
+.component:hover::before {
+  width: 4px;
+}
+
+.glass-effect {
+  background: hsl(var(--card) / 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid hsl(var(--border) / 0.5);
+}
+
+.glow-effect {
+  box-shadow: var(--shadow-glow);
+}
+
+.lang-switcher {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.lang-switcher button {
+  transition: all 0.2s;
+}
+
+.lang-switcher button:hover {
+  transform: translateY(-2px);
+}
