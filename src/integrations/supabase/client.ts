@@ -4,29 +4,56 @@ import type { Database } from './types';
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
-// 🚨 HARD FAIL if env missing (this prevents 90% of your bugs)
+// 🧠 HARD GUARD (dev + build safety)
 if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
-  throw new Error('Missing Supabase environment variables');
+  throw new Error('[Supabase] Missing environment variables');
 }
 
-export const supabase = createClient<Database>(
-  SUPABASE_URL,
-  SUPABASE_PUBLISHABLE_KEY,
-  {
-    auth: {
-      storage: localStorage,
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true,
-      flowType: 'pkce',
-    },
-  }
-);
+// 🧠 Singleton pattern (prevents multiple clients bugs)
+let supabaseInstance: ReturnType<typeof createClient<Database>> | null = null;
 
-// 🧠 SAFE AUTH RECOVERY (IMPORTANT)
-supabase.auth.onAuthStateChange(async (event, session) => {
-  if (event === 'TOKEN_REFRESHED' && !session) {
-    console.warn('Token refresh failed → clearing session');
-    await supabase.auth.signOut();
-  }
-});
+export function getSupabase() {
+  if (supabaseInstance) return supabaseInstance;
+
+  supabaseInstance = createClient<Database>(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY,
+    {
+      auth: {
+        storage: localStorage,
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        flowType: 'pkce',
+
+        // 🧠 reduces random session corruption
+        debug: false,
+      },
+    }
+  );
+
+  // 🧠 GLOBAL AUTH SAFETY LAYER
+  supabaseInstance.auth.onAuthStateChange(async (event, session) => {
+    switch (event) {
+      case 'SIGNED_OUT':
+        localStorage.removeItem('supabase.auth.token');
+        break;
+
+      case 'TOKEN_REFRESHED':
+        if (!session) {
+          console.warn('[Supabase] Token refresh failed → signing out safely');
+          await supabaseInstance.auth.signOut();
+        }
+        break;
+
+      case 'USER_UPDATED':
+        // optional hook for future
+        break;
+    }
+  });
+
+  return supabaseInstance;
+}
+
+// optional shortcut (backward compatible)
+export const supabase = getSupabase();
